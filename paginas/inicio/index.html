@@ -1,0 +1,419 @@
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="Conhecimento dos Amiguinhos — clube do livro gratuito. Baixe PDFs, discuta o livro da semana, encare os desafios de vocabulário e suba no ranking." />
+<title>Conhecimento dos Amiguinhos — Clube do Livro</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,900;1,9..144,400;1,9..144,600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../../assets/css/style.css" />
+<script>try{if(localStorage.getItem('cda_theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}</script>
+
+<!-- Textura de grão global -->
+<div class="grain" aria-hidden="true"></div>
+
+<!-- ===================== NAV ===================== -->
+<header class="nav" id="nav">
+  <a href="#topo" class="brand" data-magnetic aria-label="Conhecimento dos Amiguinhos — início">
+    <span class="brand-mark" aria-hidden="true"><svg class="logo-book" viewBox="0 0 40 32"><path class="lb-cover" d="M20 7C14 3 5 3 2 5L2 27C5 25 14 25 20 29C26 25 35 25 38 27L38 5C35 3 26 3 20 7Z"/><line class="lb-spine" x1="20" y1="7" x2="20" y2="29"/><path class="lb-line l1" d="M6 12H16"/><path class="lb-line l2" d="M6 16H16"/><path class="lb-line r1" d="M24 12H34"/><path class="lb-line r2" d="M24 16H34"/></svg></span>
+    <span class="brand-txt">
+      <strong>Conhecimento</strong>
+      <small>dos Amiguinhos</small>
+    </span>
+  </a>
+
+  <nav class="nav-links" aria-label="Navegação principal">
+    <a href="#biblioteca">Biblioteca</a>
+    <a href="#como">Como funciona</a>
+    <a href="#recursos">Recursos</a>
+    <a href="#ranking">Ranking</a>
+  </nav>
+
+  <div class="nav-actions">
+    <button class="theme-toggle" id="themeToggle" aria-label="Alternar tema claro/escuro">☾</button>
+    <button class="btn btn-ghost" data-open-modal="login" data-magnetic>Entrar</button>
+    <button class="btn btn-solid" data-open-modal="cadastro" data-magnetic>Criar conta</button>
+    <button class="nav-burger" id="burger" aria-label="Abrir menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<!-- Menu mobile -->
+<div class="mobile-menu" id="mobileMenu" aria-hidden="true">
+  <a href="#biblioteca">Biblioteca</a>
+  <a href="#como">Como funciona</a>
+  <a href="#recursos">Recursos</a>
+  <a href="#ranking">Ranking</a>
+  <button class="btn btn-solid" data-open-modal="cadastro">Criar conta grátis</button>
+</div>
+
+<main id="topo">
+
+  <!-- ===================== HERO ===================== -->
+  <section class="hero">
+    <div class="hero-grid">
+      <div class="hero-left">
+        <div class="hero-meta reveal">
+          <span class="tag-line">Clube do livro · 100% gratuito</span>
+        </div>
+
+        <h1 class="hero-title">
+          <span class="reveal-line"><span>Troque o <em>feed</em> pelo</span></span>
+          <span class="reveal-line accent-line"><span>livro.</span></span>
+        </h1>
+
+        <p class="hero-lead reveal">
+          O <strong>Conhecimento dos Amiguinhos</strong> te arranca da tela, coloca um livro
+          de verdade na sua mão e te dá <strong>argumento</strong> pra não perder mais nenhuma
+          discussão. Baixe, leia dentro do site e acompanhe seu progresso.
+        </p>
+        <div class="hero-cta reveal">
+          <button class="btn btn-solid btn-lg" data-open-modal="cadastro" data-magnetic>Entrar pro clube</button>
+          <a href="#biblioteca" class="btn btn-line btn-lg" data-magnetic>Ver a biblioteca →</a>
+        </div>
+      </div>
+
+      <!-- Animação: clicar no livro → abrir PDF → ler → ganhar pontos -->
+      <div class="hero-demo reveal" aria-hidden="true">
+        <div class="demo-window">
+          <div class="demo-bar">
+            <span class="demo-dot"></span><span class="demo-dot"></span><span class="demo-dot"></span>
+            <span class="demo-url">conhecimento-dos-amiguinhos</span>
+          </div>
+          <div class="demo-stage">
+            <!-- leitor de PDF (aparece após o clique) -->
+            <div class="d-reader">
+              <div class="d-rbar"><span class="d-rfill"></span></div>
+              <div class="d-viewport">
+                <div class="d-pages">
+                  <span class="d-line h"></span>
+                  <span class="d-line s"></span><span class="d-line m"></span><span class="d-line s"></span>
+                  <span class="d-line l"></span><span class="d-line s"></span><span class="d-line m"></span>
+                  <span class="d-line h"></span>
+                  <span class="d-line s"></span><span class="d-line m"></span><span class="d-line l"></span>
+                  <span class="d-line s"></span><span class="d-line m"></span><span class="d-line s"></span>
+                  <span class="d-line h"></span>
+                  <span class="d-line m"></span><span class="d-line s"></span><span class="d-line l"></span>
+                  <span class="d-line s"></span><span class="d-line m"></span>
+                </div>
+              </div>
+            </div>
+            <!-- popups de pontos -->
+            <span class="d-pts a">+10 pts</span>
+            <span class="d-pts b">+10 pts</span>
+            <span class="d-pts c">+10 pts</span>
+            <!-- capa do livro (só a letra) -->
+            <div class="d-book"><span class="d-letter">A</span><span class="d-book-tag">Ler agora</span></div>
+            <!-- cursor que clica -->
+            <div class="d-cursor"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== MARQUEE ===================== -->
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee-track">
+      <span>Leia mais</span><span class="dot">●</span>
+      <span>Discuta melhor</span><span class="dot">●</span>
+      <span>Pense por conta própria</span><span class="dot">●</span>
+      <span>Vença o argumento</span><span class="dot">●</span>
+      <span>Largue a tela</span><span class="dot">●</span>
+      <span>Leia mais</span><span class="dot">●</span>
+      <span>Discuta melhor</span><span class="dot">●</span>
+      <span>Pense por conta própria</span><span class="dot">●</span>
+      <span>Vença o argumento</span><span class="dot">●</span>
+      <span>Largue a tela</span><span class="dot">●</span>
+    </div>
+  </div>
+
+  <!-- ===================== STATS ===================== -->
+  <section class="stats" aria-label="Números do clube">
+    <div class="stat reveal">
+      <span class="stat-num" data-count="1240">0</span>
+      <span class="stat-label">livros em PDF na estante</span>
+    </div>
+    <div class="stat reveal">
+      <span class="stat-num" data-count="8600" data-suffix="+">0</span>
+      <span class="stat-label">amiguinhos lendo agora</span>
+    </div>
+    <div class="stat reveal">
+      <span class="stat-num" data-count="312">0</span>
+      <span class="stat-label">reuniões semanais realizadas</span>
+    </div>
+    <div class="stat reveal">
+      <span class="stat-num" data-count="47">0</span>
+      <span class="stat-label">desafios de vocabulário</span>
+    </div>
+  </section>
+
+  <!-- ===================== COMO FUNCIONA ===================== -->
+  <section class="section como" id="como">
+    <header class="section-head reveal">
+      <span class="section-idx">01</span>
+      <h2 class="section-title">Como funciona</h2>
+      <p class="section-sub">Três passos. Nenhuma desculpa.</p>
+    </header>
+
+    <ol class="steps">
+      <li class="step reveal">
+        <span class="step-num">01</span>
+        <h3>Baixe o livro</h3>
+        <p>Abra a biblioteca, filtre por tema — filosofia, ficção científica, matemática — e baixe o PDF na hora. Sem cadastro pago, sem pegadinha. É só clicar e começar a ler.</p>
+        <span class="step-tag">PDF instantâneo</span>
+      </li>
+      <li class="step reveal">
+        <span class="step-num">02</span>
+        <h3>Apareça na reunião</h3>
+        <p>Toda semana a gente elege um livro e marca o encontro. Você chega, defende sua leitura, discorda dos outros e sai com dez interpretações que nunca teria sozinho.</p>
+        <span class="step-tag">Encontro semanal</span>
+      </li>
+      <li class="step reveal">
+        <span class="step-num">03</span>
+        <h3>Encare o desafio</h3>
+        <p>Aquelas palavras que o Freud usa e ninguém entende? A gente transforma em desafio. Você acerta, pontua e sobe no ranking. Vocabulário vira jogo — e você vira arma.</p>
+        <span class="step-tag">Desafio + ranking</span>
+      </li>
+    </ol>
+  </section>
+
+  <!-- ===================== RECURSOS (FEATURES) ===================== -->
+  <section class="section recursos" id="recursos">
+    <header class="section-head reveal">
+      <span class="section-idx">02</span>
+      <h2 class="section-title">Mergulho nos recursos</h2>
+      <p class="section-sub">O clube inteiro em três ferramentas que funcionam de verdade.</p>
+    </header>
+
+    <!-- Feature 1 -->
+    <article class="feature reveal">
+      <div class="feature-copy">
+        <span class="feature-kicker">Estante viva</span>
+        <h3>Uma biblioteca que cabe no bolso e não pesa nada.</h3>
+        <p>Mais de mil títulos organizados por tema, com leitor de PDF direto no navegador. Marque a página, salve trechos e leve seus livros pra qualquer tela — sem gastar um centavo.</p>
+        <ul class="feature-list">
+          <li>Download imediato em PDF</li>
+          <li>Organização por seções e tags</li>
+          <li>Continue de onde parou</li>
+        </ul>
+      </div>
+      <!-- Mockup CSS: prateleira de livros -->
+      <div class="feature-mock mock-shelf" aria-hidden="true">
+        <div class="shelf">
+          <span class="book b1">Duna</span>
+          <span class="book b2">Sapiens</span>
+          <span class="book b3">1984</span>
+          <span class="book b4">Zaratustra</span>
+          <span class="book b5">Machado</span>
+        </div>
+        <div class="shelf-plank"></div>
+        <div class="mock-caption">estante · atualizada agora</div>
+      </div>
+    </article>
+
+    <!-- Feature 2 -->
+    <article class="feature feature-reverse reveal">
+      <div class="feature-copy">
+        <span class="feature-kicker">Livro da semana</span>
+        <h3>Discussão ao vivo. Onde o argumento nasce.</h3>
+        <p>Um livro por semana, uma sala de debate quente. Comente capítulo por capítulo, responda quem discorda de você e veja a leitura ganhar camadas que sozinho você nunca alcançaria.</p>
+        <ul class="feature-list">
+          <li>Thread por capítulo</li>
+          <li>Reações e citações</li>
+          <li>Encontro ao vivo toda sexta</li>
+        </ul>
+      </div>
+      <!-- Mockup CSS: chat de discussão -->
+      <div class="feature-mock mock-chat" aria-hidden="true">
+        <div class="chat-head"><span class="chat-dot"></span> Debate · O Mal-Estar na Civilização</div>
+        <div class="chat-bubbles">
+          <div class="bubble in">O Freud é pessimista demais no cap. 3, discordo.</div>
+          <div class="bubble out">Discordo do teu discordar 😅 ele só é realista.</div>
+          <div class="bubble in">Alguém explica "sublimação" de novo?</div>
+          <div class="bubble out">Cai no desafio da semana que a ficha cai.</div>
+        </div>
+        <div class="chat-typing"><span></span><span></span><span></span></div>
+      </div>
+    </article>
+
+    <!-- Feature 3 -->
+    <article class="feature reveal">
+      <div class="feature-copy">
+        <span class="feature-kicker">Desafio de vocabulário</span>
+        <h3>Palavra difícil vira ponto no placar.</h3>
+        <p>Sublimação, recalque, pulsão, superego. Em vez de fingir que entendeu, você joga: recebe a palavra, escolhe o significado e ganha pontos. Vocabulário que fica — porque virou disputa.</p>
+        <ul class="feature-list">
+          <li>Cartas de palavras difíceis</li>
+          <li>Pontos a cada acerto</li>
+          <li>Sobe direto no ranking</li>
+        </ul>
+      </div>
+      <!-- Mockup CSS: flashcard que vira -->
+      <div class="feature-mock mock-card" aria-hidden="true">
+        <div class="flashcard">
+          <div class="flash-face flash-front">
+            <span class="flash-label">palavra</span>
+            <span class="flash-word">Sublimação</span>
+          </div>
+          <div class="flash-face flash-back">
+            <span class="flash-label">significado</span>
+            <span class="flash-def">Desviar um impulso para uma atividade socialmente valorizada.</span>
+            <span class="flash-pts">+10 pts</span>
+          </div>
+        </div>
+        <div class="mock-caption">vire a carta · +10 pts</div>
+      </div>
+    </article>
+  </section>
+
+  <!-- ===================== BIBLIOTECA ===================== -->
+  <section class="section biblioteca" id="biblioteca">
+    <header class="section-head reveal">
+      <span class="section-idx">03</span>
+      <h2 class="section-title">A biblioteca</h2>
+      <p class="section-sub">Escolha um tema. Baixe. Comece hoje.</p>
+    </header>
+
+    <div class="filters reveal" role="tablist" aria-label="Filtrar livros por seção">
+      <button class="filter is-active" data-filter="all">Todos</button>
+      <button class="filter" data-filter="ficcao">Ficção científica</button>
+      <button class="filter" data-filter="autoajuda">Auto-ajuda</button>
+      <button class="filter" data-filter="filosofia">Filosofia</button>
+      <button class="filter" data-filter="historia">História</button>
+      <button class="filter" data-filter="literatura">Literatura</button>
+      <button class="filter" data-filter="matematica">Matemática</button>
+    </div>
+
+    <div class="books" id="books" aria-live="polite">
+      <!-- Cards injetados via JS -->
+    </div>
+    <p class="books-empty" id="booksEmpty" hidden>Nenhum livro nessa seção ainda. Em breve!</p>
+  </section>
+
+  <!-- ===================== RANKING ===================== -->
+  <section class="section ranking" id="ranking">
+    <header class="section-head reveal">
+      <span class="section-idx">04</span>
+      <h2 class="section-title">Ranking dos amiguinhos</h2>
+      <p class="section-sub">Quem lê mais, pontua mais. Simples assim.</p>
+    </header>
+
+    <ol class="board reveal" id="board"><!-- injetado via JS --></ol>
+  </section>
+
+  <!-- ===================== CTA FINAL ===================== -->
+  <section class="cta-final">
+    <h2 class="reveal">Sempre foi de graça.<br /><em>A desculpa é que acabou.</em></h2>
+    <button class="btn btn-solid btn-lg reveal" data-open-modal="cadastro" data-magnetic>Criar minha conta grátis</button>
+  </section>
+
+  <!-- ===================== FAQ ===================== -->
+  <section class="section faq">
+    <header class="section-head reveal">
+      <span class="section-idx">05</span>
+      <h2 class="section-title">Perguntas honestas</h2>
+    </header>
+
+    <div class="accordion reveal">
+      <details class="acc-item">
+        <summary>É realmente de graça? Onde está a pegadinha?<span class="acc-icon"></span></summary>
+        <div class="acc-body"><p>Sem pegadinha. O clube é mantido pela própria comunidade. Você baixa os livros, participa das reuniões e dos desafios sem pagar nada e sem cartão de crédito.</p></div>
+      </details>
+      <details class="acc-item">
+        <summary>Preciso ler o livro inteiro pra participar?<span class="acc-icon"></span></summary>
+        <div class="acc-body"><p>Não. O ideal é chegar em dia com o livro da semana, mas ninguém é expulso por atraso. Chegue com o que leu — a discussão puxa o resto.</p></div>
+      </details>
+      <details class="acc-item">
+        <summary>Como funcionam os pontos e o ranking?<span class="acc-icon"></span></summary>
+        <div class="acc-body"><p>Você ganha pontos participando das discussões e acertando os desafios de vocabulário. Os pontos te colocam no ranking semanal e mensal dos amiguinhos.</p></div>
+      </details>
+      <details class="acc-item">
+        <summary>Os livros são legais de baixar?<span class="acc-icon"></span></summary>
+        <div class="acc-body"><p>Priorizamos obras em domínio público e materiais com distribuição autorizada. Quando um autor pede a retirada de um título, a gente respeita na hora.</p></div>
+      </details>
+    </div>
+  </section>
+
+</main>
+
+<!-- ===================== FOOTER ===================== -->
+<footer class="footer">
+  <div class="footer-top">
+    <span class="brand-mark big" aria-hidden="true"><svg class="logo-book" viewBox="0 0 40 32"><path class="lb-cover" d="M20 7C14 3 5 3 2 5L2 27C5 25 14 25 20 29C26 25 35 25 38 27L38 5C35 3 26 3 20 7Z"/><line class="lb-spine" x1="20" y1="7" x2="20" y2="29"/><path class="lb-line l1" d="M6 12H16"/><path class="lb-line l2" d="M6 16H16"/><path class="lb-line r1" d="M24 12H34"/><path class="lb-line r2" d="M24 16H34"/></svg></span>
+    <p class="footer-claim">Largue a tela.<br />Pegue o livro.</p>
+  </div>
+  <div class="footer-cols">
+    <div>
+      <h4>Seções</h4>
+      <a href="#biblioteca">Ficção científica</a>
+      <a href="#biblioteca">Filosofia</a>
+      <a href="#biblioteca">História</a>
+      <a href="#biblioteca">Matemática</a>
+    </div>
+    <div>
+      <h4>Clube</h4>
+      <a href="#como">Como funciona</a>
+      <a href="../painel/dashboard.html">Desafios</a>
+      <a href="#ranking">Ranking</a>
+    </div>
+    <div>
+      <h4>Conta</h4>
+      <a href="#" data-open-modal="login">Entrar</a>
+      <a href="#" data-open-modal="cadastro">Criar conta</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 Conhecimento dos Amiguinhos</span>
+    <span>Feito por quem lê, pra quem quer ler.</span>
+  </div>
+</footer>
+
+<!-- ===================== MODAL AUTH ===================== -->
+<div class="modal" id="modal" aria-hidden="true">
+  <div class="modal-backdrop" data-close-modal></div>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <button class="modal-close" data-close-modal aria-label="Fechar">×</button>
+    <span class="modal-mark" aria-hidden="true"><svg class="logo-book" viewBox="0 0 40 32"><path class="lb-cover" d="M20 7C14 3 5 3 2 5L2 27C5 25 14 25 20 29C26 25 35 25 38 27L38 5C35 3 26 3 20 7Z"/><line class="lb-spine" x1="20" y1="7" x2="20" y2="29"/><path class="lb-line l1" d="M6 12H16"/><path class="lb-line l2" d="M6 16H16"/><path class="lb-line r1" d="M24 12H34"/><path class="lb-line r2" d="M24 16H34"/></svg></span>
+    <h3 id="modalTitle" class="modal-title">Entrar no clube</h3>
+    <p class="modal-sub" id="modalSub">Bem-vindo de volta, amiguinho.</p>
+
+    <form class="modal-form" id="authForm" novalidate>
+      <label class="field" data-field="nome">
+        <span>Nome</span>
+        <input type="text" name="nome" autocomplete="username" placeholder="Como te chamam?" required />
+      </label>
+      <label class="field" data-field="email">
+        <span>E-mail</span>
+        <input type="email" name="email" autocomplete="email" placeholder="voce@email.com" />
+      </label>
+      <label class="field">
+        <span>Senha</span>
+        <input type="password" name="senha" autocomplete="current-password" placeholder="mínimo 6 caracteres" required minlength="6" />
+      </label>
+      <button type="submit" class="btn btn-solid btn-block" id="authSubmit">Entrar</button>
+      <p class="modal-switch">
+        <span id="switchTxt">Ainda não é amiguinho?</span>
+        <button type="button" class="link-btn" id="switchMode">Criar conta</button>
+      </p>
+    </form>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast" aria-live="polite"></div>
+
+<script src="../../assets/js/db.js"></script>
+<script src="../../assets/js/home.js"></script>
+<script>
+  /* Fallback de segurança: garante que o conteúdo apareça mesmo
+     que algum script falhe (nunca deixa a página em branco). */
+  (function () {
+    function reveal() {
+      document.querySelectorAll(".reveal:not(.in)").forEach(function (e) { e.classList.add("in"); });
+      var h = document.querySelector(".hero-title"); if (h) h.classList.add("in");
+    }
+    window.addEventListener("load", function () { setTimeout(reveal, 1500); });
+  })();
+</script>

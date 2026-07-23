@@ -1,0 +1,57 @@
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="Leitor de PDF do Conhecimento dos Amiguinhos — leia dentro do site e ganhe pontos a cada 10% do livro." />
+<title>Leitor — Conhecimento dos Amiguinhos</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../../assets/css/style.css" />
+<link rel="stylesheet" href="../../assets/css/reader.css" />
+<script>try{if(localStorage.getItem('cda_theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}</script>
+
+<div class="grain" aria-hidden="true"></div>
+
+<!-- Topbar do leitor -->
+<header class="rd-top">
+  <a href="../painel/dashboard.html" class="rd-back" aria-label="Voltar ao painel">← Painel</a>
+
+  <div class="rd-title">
+    <strong id="rdTitle">Leitor</strong>
+    <span id="rdPageInfo">—</span>
+  </div>
+
+  <div class="rd-actions">
+    <span class="rd-pts" id="rdPts" hidden>★ <b id="rdPtsNum">0</b> pts</span>
+    <span class="rd-pct" id="rdPct">0%</span>
+    <button class="btn btn-line" id="downloadBtn" hidden>↓ Download do PDF</button>
+    <button class="theme-toggle" id="themeToggle" aria-label="Alternar tema claro/escuro">☾</button>
+    <input type="file" id="fileInput" accept="application/pdf" hidden />
+  </div>
+
+  <!-- barra de progresso -->
+  <div class="rd-progress"><span class="rd-progress-fill" id="rdFill"></span></div>
+</header>
+
+<main class="rd-main">
+  <!-- estado vazio (livro sem PDF vinculado) -->
+  <div class="rd-empty" id="rdEmpty" hidden>
+    <span class="rd-empty-mark" aria-hidden="true"><svg class="logo-book" viewBox="0 0 40 32"><path class="lb-cover" d="M20 7C14 3 5 3 2 5L2 27C5 25 14 25 20 29C26 25 35 25 38 27L38 5C35 3 26 3 20 7Z"/><line class="lb-spine" x1="20" y1="7" x2="20" y2="29"/><path class="lb-line l1" d="M6 12H16"/><path class="lb-line l2" d="M6 16H16"/><path class="lb-line r1" d="M24 12H34"/><path class="lb-line r2" d="M24 16H34"/></svg></span>
+    <h1>Este livro ainda não está disponível para leitura</h1>
+    <p>Ainda estamos digitalizando este título para o leitor do clube. Enquanto isso, você pode abrir um PDF do seu computador.</p>
+    <div class="rd-empty-cta">
+      <button class="btn btn-solid btn-lg" id="emptyOpen">Abrir um PDF do meu PC</button>
+    </div>
+  </div>
+
+  <!-- área de leitura -->
+  <div class="rd-pages" id="rdPages"></div>
+</main>
+
+<div class="toast" id="toast" aria-live="polite"></div>
+
+<!-- PDF embutido (base64) + motor PDF.js -->
+<script src="../../assets/js/db.js"></script>
+<script src="../../assets/data/noitesbrancas.data.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="../../assets/js/reader.js"></script>

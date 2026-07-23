@@ -1,0 +1,60 @@
+/* ============================================================
+   LEITOR DE PDF — Conhecimento dos Amiguinhos
+   ============================================================ */
+
+body { background: var(--paper-2); }
+
+/* ---------- Topbar ---------- */
+.rd-top {
+  position: sticky; top: 0; z-index: 50;
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 20px;
+  padding: 14px clamp(16px, 3vw, 34px); background: var(--paper);
+  border-bottom: 1.5px solid var(--ink);
+}
+.rd-back { font-weight: 700; font-size: .9rem; padding: 8px 14px; border: 1.5px solid var(--ink); border-radius: var(--radius); transition: background .2s, color .2s; white-space: nowrap; }
+.rd-back:hover { background: var(--ink); color: var(--paper); }
+
+.rd-title { min-width: 0; text-align: center; display: flex; flex-direction: column; line-height: 1.15; }
+.rd-title strong { font-family: var(--serif); font-weight: 900; font-size: 1.15rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rd-title span { font-size: .74rem; color: var(--ink-soft); letter-spacing: .05em; text-transform: uppercase; font-weight: 600; }
+
+.rd-actions { display: flex; align-items: center; gap: 12px; }
+.rd-pct { font-family: var(--serif); font-weight: 900; font-size: 1.5rem; color: var(--vermelho); min-width: 62px; text-align: right; }
+.rd-pts { display: inline-flex; align-items: center; gap: 5px; font-size: .82rem; font-weight: 600; padding: 7px 13px; border: 1.5px solid var(--ink); border-radius: 40px; background: var(--ink); color: var(--paper); white-space: nowrap; }
+.rd-pts b { font-family: var(--serif); font-weight: 900; }
+.rd-pts.pop { animation: ptsPop .5s var(--ease); }
+@keyframes ptsPop { 0% { transform: scale(1); } 40% { transform: scale(1.18); background: var(--vermelho); } 100% { transform: scale(1); } }
+
+.rd-progress { grid-column: 1 / -1; height: 8px; border: 1.5px solid var(--ink); border-radius: 40px; overflow: hidden; background: var(--paper-2); }
+.rd-progress-fill {
+  display: block; height: 100%; width: 0;
+  background: repeating-linear-gradient(45deg, var(--vermelho) 0 8px, var(--vermelho-esc) 8px 16px);
+  transition: width .2s linear;
+}
+
+/* ---------- Main ---------- */
+.rd-main { min-height: calc(100vh - 90px); padding: clamp(20px, 4vw, 44px) 16px 120px; }
+
+.rd-pages { display: flex; flex-direction: column; align-items: center; gap: 22px; }
+.rd-page-wrap { position: relative; width: 100%; max-width: 840px; box-shadow: 10px 10px 0 rgba(23,19,13,.9); border: 1.5px solid var(--ink); background: #fff; }
+.rd-page-wrap canvas { display: block; width: 100%; height: auto; }
+.rd-page-num {
+  position: absolute; bottom: 10px; right: 12px; background: var(--ink); color: var(--paper);
+  font-size: .68rem; font-weight: 700; padding: 4px 9px; border-radius: 40px; letter-spacing: .05em;
+}
+
+/* ---------- Estado vazio ---------- */
+.rd-empty { max-width: 620px; margin: 6vh auto 0; text-align: center; padding: 0 16px; }
+.rd-empty-mark { font-family: var(--serif); font-weight: 900; font-size: 2rem; width: 72px; height: 72px; display: grid; place-items: center; background: var(--vermelho); color: var(--paper); border-radius: 50%; margin: 0 auto 24px; }
+.rd-empty-mark em { font-style: italic; font-weight: 400; }
+.rd-empty h1 { font-family: var(--serif); font-weight: 900; font-size: clamp(1.6rem, 4vw, 2.6rem); line-height: 1; letter-spacing: -.02em; }
+.rd-empty p { color: var(--ink-soft); margin: 16px 0 28px; font-size: 1.05rem; }
+.rd-empty-cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+@media (max-width: 680px) {
+  .rd-top { grid-template-columns: auto 1fr; }
+  .rd-title { grid-column: 2; text-align: left; }
+  .rd-actions { grid-column: 1 / -1; justify-content: space-between; flex-wrap: wrap; }
+  .rd-progress { order: 5; }
+  #downloadBtn { font-size: .74rem; padding: .7em 1em; }
+}

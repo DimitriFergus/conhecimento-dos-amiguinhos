@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Conhecimento dos Amiguinhos</title>
+<script>
+  // Ponto de entrada do site — leva para a página inicial.
+  try { if (localStorage.getItem('cda_theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark'); } catch (e) {}
+  window.location.replace('paginas/inicio/index.html');
+</script>
+<style>
+  html, body { margin: 0; height: 100%; background: #efe9dd; color: #17130d; font-family: Georgia, serif; }
+  :root[data-theme="dark"] body { background: #14110c; color: #f3ede0; }
+  .wrap { height: 100%; display: grid; place-items: center; text-align: center; }
+  a { color: #e8452a; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <p>Abrindo o clube… se nada acontecer, <a href="paginas/inicio/index.html">clique aqui</a>.</p>
+  </div>
+</body>
+</html>

@@ -1,0 +1,253 @@
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="Sua área do Conhecimento dos Amiguinhos — estante, desafios do Freud, ranking e progresso." />
+<title>Minha área — Conhecimento dos Amiguinhos</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,900;1,9..144,400;1,9..144,600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../../assets/css/style.css" />
+<link rel="stylesheet" href="../../assets/css/dashboard.css" />
+<script>try{if(localStorage.getItem('cda_theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}</script>
+
+<div class="grain" aria-hidden="true"></div>
+
+<div class="app">
+
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside class="sidebar" id="sidebar">
+    <a href="../inicio/index.html" class="side-brand" data-magnetic aria-label="Voltar ao site">
+      <span class="brand-mark" aria-hidden="true"><svg class="logo-book" viewBox="0 0 40 32"><path class="lb-cover" d="M20 7C14 3 5 3 2 5L2 27C5 25 14 25 20 29C26 25 35 25 38 27L38 5C35 3 26 3 20 7Z"/><line class="lb-spine" x1="20" y1="7" x2="20" y2="29"/><path class="lb-line l1" d="M6 12H16"/><path class="lb-line l2" d="M6 16H16"/><path class="lb-line r1" d="M24 12H34"/><path class="lb-line r2" d="M24 16H34"/></svg></span>
+      <span class="side-brand-txt"><strong>Conhecimento</strong><small>dos Amiguinhos</small></span>
+    </a>
+
+    <!-- Perfil -->
+    <div class="profile">
+      <button class="avatar" id="avatar" aria-label="Trocar foto de perfil">
+        <span class="avatar-init" id="avatarInit">A</span>
+        <span class="avatar-edit" aria-hidden="true">Trocar foto</span>
+      </button>
+      <input type="file" id="avatarInput" accept="image/*" hidden />
+      <h2 class="profile-name" id="profileName">Amiguinho</h2>
+      <p class="profile-handle" id="profileHandle">@leitor</p>
+
+      <div class="xp">
+        <div class="xp-top">
+          <span class="lvl" id="lvlTag">LVL 1</span>
+          <span class="xp-nums" id="xpNums">0 / 500 XP</span>
+        </div>
+        <div class="xp-bar"><span class="xp-fill" id="xpFill"></span></div>
+        <span class="xp-hint" id="xpHint">Faltam 500 XP para o próximo nível</span>
+      </div>
+    </div>
+
+    <!-- Navegação / funções -->
+    <nav class="side-nav" aria-label="Funções">
+      <button class="side-link is-active" data-view="inicio">
+        <span class="ico">◆</span> Início
+      </button>
+      <button class="side-link" data-view="estante">
+        <span class="ico">▬</span> Minha estante
+      </button>
+      <button class="side-link" data-view="alexandria">
+        <span class="ico">❖</span> Biblioteca de Alexandria
+      </button>
+      <button class="side-link" data-view="desafios">
+        <span class="ico">✦</span> Desafios do Freud
+      </button>
+      <button class="side-link" data-view="ranking">
+        <span class="ico">▲</span> Ranking
+      </button>
+      <button class="side-link" data-view="perfil">
+        <span class="ico">●</span> Perfil
+      </button>
+    </nav>
+
+    <button class="side-logout" id="logout">↩ Sair da conta</button>
+  </aside>
+
+  <!-- botão mobile para abrir sidebar -->
+  <button class="side-toggle" id="sideToggle" aria-label="Abrir menu"><span></span><span></span><span></span></button>
+  <div class="side-scrim" id="sideScrim"></div>
+
+  <!-- ===================== MAIN ===================== -->
+  <main class="dash">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div class="topbar-hi">
+        <span class="topbar-date" id="topDate">Terça · leitura do dia</span>
+        <strong id="topName">Olá, amiguinho</strong>
+      </div>
+      <div class="topbar-pills">
+        <span class="pill pill-fire">🔥 <b id="streak">5</b> dias</span>
+        <span class="pill pill-pts"><b id="topPts">0</b> pts</span>
+        <button class="theme-toggle" id="themeToggle" aria-label="Alternar tema claro/escuro">☾</button>
+      </div>
+    </header>
+
+    <!-- ========== VIEW: INÍCIO ========== -->
+    <section class="view is-active" data-view="inicio">
+      <div class="hello reveal">
+        <span class="hello-kicker">Bem-vindo de volta</span>
+        <h1 class="hello-title">Que bom que você largou o <em class="ig">instagram</em>,<br />bora aprender mais?</h1>
+        <p class="hello-sub">Você parou no meio de algumas leituras. Retoma de onde deixou — o conhecimento não espera.</p>
+      </div>
+
+      <!-- mini stats -->
+      <div class="mini-stats reveal">
+        <div class="mini"><span class="mini-num" id="mLvl">1</span><span class="mini-lbl">nível atual</span></div>
+        <div class="mini"><span class="mini-num" id="mPts">0</span><span class="mini-lbl">pontos totais</span></div>
+        <div class="mini"><span class="mini-num" id="mBooks">0</span><span class="mini-lbl">livros na estante</span></div>
+        <div class="mini"><span class="mini-num" id="mRank">#0</span><span class="mini-lbl">no ranking geral</span></div>
+      </div>
+
+      <!-- Continue lendo -->
+      <div class="block-head reveal">
+        <h3>Continue lendo</h3>
+        <button class="link-more" data-view="estante">Ver estante inteira →</button>
+      </div>
+      <div class="reading" id="readingList"><!-- injetado --></div>
+
+      <!-- Recomendados (algoritmo) -->
+      <div class="block-head reveal">
+        <h3>Recomendados para você</h3>
+        <span class="reco-why" id="recoWhy"></span>
+      </div>
+      <div class="reco-grid" id="recoGrid"><!-- injetado --></div>
+
+      <!-- CTA desafio -->
+      <div class="promo reveal">
+        <div class="promo-txt">
+          <span class="promo-kicker">Desafio do dia</span>
+          <h3>Sabe o que o Freud quis dizer com <em>“sublimação”</em>?</h3>
+          <p>5 palavras difíceis. 50 pontos em jogo. Prova que você não só leu — entendeu.</p>
+        </div>
+        <button class="btn btn-solid btn-lg" data-view="desafios" data-magnetic>Encarar o desafio →</button>
+      </div>
+    </section>
+
+    <!-- ========== VIEW: ESTANTE ========== -->
+    <section class="view" data-view="estante">
+      <div class="view-head reveal">
+        <span class="section-idx">Minha estante</span>
+        <h1 class="view-title">Os livros que você baixou</h1>
+        <p class="view-sub">Tudo o que você trouxe pra estante fica aqui, com o quanto você já avançou.</p>
+      </div>
+      <div class="shelf-grid" id="shelfGrid"><!-- injetado --></div>
+      <p class="shelf-empty" id="shelfEmpty" hidden>Sua estante está vazia. Vá até a <button class="link-inline" data-view="alexandria">Biblioteca de Alexandria →</button></p>
+    </section>
+
+    <!-- ========== VIEW: BIBLIOTECA DE ALEXANDRIA ========== -->
+    <section class="view" data-view="alexandria">
+      <div class="view-head reveal">
+        <span class="section-idx">Biblioteca de Alexandria</span>
+        <h1 class="view-title">Todo o acervo, num lugar só</h1>
+        <p class="view-sub">Aqui estão todos os livros do clube, categorizados. Clique em <strong>adicionar</strong> e ele vai direto para a sua estante.</p>
+      </div>
+
+      <div class="filters" id="alexFilters" role="tablist" aria-label="Filtrar por seção">
+        <button class="filter is-active" data-filter="all">Todos</button>
+        <button class="filter" data-filter="ficcao">Ficção científica</button>
+        <button class="filter" data-filter="autoajuda">Auto-ajuda</button>
+        <button class="filter" data-filter="filosofia">Filosofia</button>
+        <button class="filter" data-filter="historia">História</button>
+        <button class="filter" data-filter="literatura">Literatura</button>
+        <button class="filter" data-filter="matematica">Matemática</button>
+      </div>
+
+      <div class="alex-grid" id="alexGrid" aria-live="polite"><!-- injetado --></div>
+    </section>
+
+    <!-- ========== VIEW: DESAFIOS ========== -->
+    <section class="view" data-view="desafios">
+      <div class="view-head reveal">
+        <span class="section-idx">Desafios do Freud</span>
+        <h1 class="view-title">Palavra difícil vira ponto</h1>
+        <p class="view-sub">Acertou, pontuou, subiu no ranking. Errou, aprendeu. Ninguém sai perdendo.</p>
+      </div>
+      <div class="quiz" id="quiz">
+        <div class="quiz-top">
+          <span class="quiz-progress" id="quizProgress">Palavra 1 de 5</span>
+          <span class="quiz-score" id="quizScore">0 pts</span>
+        </div>
+        <h3 class="quiz-word" id="quizWord">—</h3>
+        <div class="quiz-options" id="quizOptions"></div>
+        <div class="quiz-feedback" id="quizFeedback" aria-live="polite"></div>
+        <button class="btn btn-solid quiz-next" id="quizNext" hidden data-magnetic>Próxima palavra →</button>
+      </div>
+    </section>
+
+    <!-- ========== VIEW: RANKING ========== -->
+    <section class="view" data-view="ranking">
+      <div class="view-head reveal">
+        <span class="section-idx">Ranking</span>
+        <h1 class="view-title">Onde você está na disputa</h1>
+        <p class="view-sub">Quem lê mais e acerta mais desafios, sobe. Você está marcado em vermelho.</p>
+      </div>
+      <ol class="board" id="board"></ol>
+    </section>
+
+    <!-- ========== VIEW: PERFIL ========== -->
+    <section class="view" data-view="perfil">
+      <div class="view-head reveal">
+        <span class="section-idx">Perfil</span>
+        <h1 class="view-title">Sua carteira de amiguinho</h1>
+      </div>
+      <div class="profile-grid reveal">
+        <div class="pcard">
+          <button class="avatar avatar-lg" id="avatarBig" aria-label="Trocar foto de perfil">
+            <span class="avatar-init" id="avatarInitBig">A</span>
+            <span class="avatar-edit" aria-hidden="true">Trocar foto</span>
+          </button>
+          <label class="pfield">
+            <span>Nome de leitor</span>
+            <input type="text" id="nameInput" placeholder="Seu nome" />
+          </label>
+          <button class="btn btn-solid btn-block" id="saveName">Salvar nome</button>
+        </div>
+        <div class="pcard pcard-stats">
+          <h3>Sua evolução</h3>
+          <div class="pstat"><span>Nível</span><b id="pLvl">1</b></div>
+          <div class="pstat"><span>Pontos totais</span><b id="pPts">0</b></div>
+          <div class="pstat"><span>Livros na estante</span><b id="pBooks">0</b></div>
+          <div class="pstat"><span>Desafios concluídos</span><b id="pQuiz">0</b></div>
+          <div class="pstat"><span>Posição no ranking</span><b id="pRank">#0</b></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ===================== MODAL DE INFORMAÇÕES DO LIVRO ===================== -->
+<div class="bookmodal" id="bookModal" aria-hidden="true">
+  <div class="bookmodal-backdrop" data-close-book></div>
+  <div class="bookmodal-card" role="dialog" aria-modal="true" aria-labelledby="bmTitle">
+    <button class="bookmodal-close" data-close-book aria-label="Fechar">×</button>
+    <div class="bookmodal-head">
+      <div class="bookmodal-cover" id="bmCover"></div>
+      <div class="bookmodal-info">
+        <span class="bm-cat" id="bmCat"></span>
+        <h3 id="bmTitle"></h3>
+        <p class="bm-author" id="bmAuthor"></p>
+        <div class="bm-chips" id="bmChips"></div>
+        <div class="bm-progress" id="bmProgress"></div>
+      </div>
+    </div>
+    <div class="bookmodal-body">
+      <h4>Sinopse</h4>
+      <p id="bmSyn"></p>
+      <h4>Por que ler</h4>
+      <p id="bmWhy"></p>
+      <div class="bm-themes" id="bmThemes"></div>
+    </div>
+    <div class="bookmodal-actions" id="bmActions"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" aria-live="polite"></div>
+
+<script src="../../assets/js/db.js"></script>
+<script src="../../assets/js/booksdata.js"></script>
+<script src="../../assets/js/dashboard.js"></script>
