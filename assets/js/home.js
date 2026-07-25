@@ -374,10 +374,16 @@
     }, 400);
   });
 
-  /* ---------- painéis do modal (form / verificação / esqueci senha) ---------- */
+  /* ---------- painéis do modal (form / verificação / esqueci senha / renomear) ---------- */
   const verifyPanel = $("#verifyPanel");
   const forgotPanel = $("#forgotPanel");
-  function hidePanels() { verifyPanel.hidden = true; forgotPanel.hidden = true; }
+  const renamePanel = $("#renamePanel");
+  function hidePanels() { verifyPanel.hidden = true; forgotPanel.hidden = true; if (renamePanel) renamePanel.hidden = true; }
+  function showRename() {
+    authForm.hidden = true; hidePanels(); if (renamePanel) renamePanel.hidden = false;
+    modalTitle.style.display = "none"; modalSub.style.display = "none";
+    const ri = $("#renameInput"); if (ri) { ri.value = ""; setTimeout(() => ri.focus(), 60); }
+  }
   function showForm() {
     hidePanels();
     authForm.hidden = false;
@@ -489,14 +495,29 @@
   $("#verifyDone").addEventListener("click", async (e) => {
     const btn = e.currentTarget;
     btn.disabled = true; const t = btn.textContent; btn.textContent = "Conferindo…";
-    const verified = await CDA.auth.reloadVerified();
+    const r = await CDA.auth.reloadVerified();
     btn.disabled = false; btn.textContent = t;
-    if (verified) {
-      showToast("E-mail confirmado! Entrando… ✅");
-      setTimeout(() => { window.location.href = "../painel/dashboard.html"; }, 600);
-    } else {
+    if (!r.verified) {
       showToast("Ainda não confirmado. Abra o link no seu e-mail (veja o spam também).");
+      return;
     }
+    if (r.needsRename) { showRename(); return; } // nome foi confirmado por outra pessoa
+    showToast("E-mail confirmado! Entrando… ✅");
+    setTimeout(() => { window.location.href = "../painel/dashboard.html"; }, 600);
+  });
+
+  /* ---------- renomear (quando o nome foi confirmado por outra pessoa) ---------- */
+  const renameSave = $("#renameSave");
+  if (renameSave) renameSave.addEventListener("click", async () => {
+    const novo = $("#renameInput").value.trim();
+    const hint = $("#renameHint");
+    renameSave.disabled = true; const t = renameSave.textContent; renameSave.textContent = "Salvando…";
+    const r = await CDA.auth.changeName(novo);
+    renameSave.disabled = false; renameSave.textContent = t;
+    if (r.ok) {
+      showToast("Nome salvo! Entrando… ✅");
+      setTimeout(() => { window.location.href = "../painel/dashboard.html"; }, 600);
+    } else if (hint) { hint.textContent = "✕ " + r.error; hint.className = "field-hint no"; }
   });
   $("#verifyResend").addEventListener("click", async (e) => {
     const btn = e.currentTarget; btn.disabled = true;

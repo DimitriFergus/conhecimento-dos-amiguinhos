@@ -149,10 +149,11 @@
     var pwCheck = validPassword(password);
     if (!pwCheck.ok) return { ok: false, error: pwCheck.error };
 
-    // 1) nome disponível? (checagem rápida antes de criar a conta)
+    // 1) nome disponível? Só bloqueia se estiver CONFIRMADO por alguém.
+    //    Nome de conta NÃO confirmada é reclamável (não trava o nome).
     try {
       var pre = await nameDoc(key).get();
-      if (pre.exists) return { ok: false, error: "Esse nome já está em uso. Escolha outro." };
+      if (pre.exists && pre.data().verified === true) return { ok: false, error: "Esse nome já está em uso. Escolha outro." };
     } catch (e) { return { ok: false, error: "Erro de conexão com o banco. Tente de novo." }; }
 
     // 2) cria a conta no Firebase Auth (garante e-mail único)
@@ -161,12 +162,13 @@
     catch (e) { return { ok: false, error: mapAuthError(e) }; }
     var uid = cred.user.uid;
 
-    // 3) reserva o nome + cria o doc do usuário de forma ATÔMICA (transação)
+    // 3) reserva PROVISÓRIA do nome (verified:false) + doc do usuário, atômico.
+    //    Só falha se o nome já estiver CONFIRMADO por outra conta.
     try {
       await fdb.runTransaction(async function (tx) {
         var nSnap = await tx.get(nameDoc(key));
-        if (nSnap.exists) { var err = new Error("NAME_TAKEN"); err._taken = true; throw err; }
-        tx.set(nameDoc(key), { uid: uid, email: email, name: name });
+        if (nSnap.exists && nSnap.data().verified === true) { var err = new Error("NAME_TAKEN"); err._taken = true; throw err; }
+        tx.set(nameDoc(key), { uid: uid, email: email, name: name, verified: false });
         tx.set(userDoc(uid), {
           name: name, nameKey: key, email: email,
           points: 0, quizDone: 0, avatar: null, shelf: [], history: {},
@@ -206,6 +208,8 @@
     catch (e) { return { ok: false, error: mapAuthError(e) }; }
 
     try { await hydrate(cred.user); } catch (e) { cache = blankCache(cred.user, name); }
+    // conta já confirmada: garante que o nome esteja travado para ela
+    if (cred.user.emailVerified) { try { await claimVerifiedName(); } catch (e) {} }
     return { ok: true, needsVerification: !cred.user.emailVerified, user: publicUser() };
   }
 
@@ -220,8 +224,51 @@
     if (!c.ok) return { ok: false, error: c.error };
     try {
       var snap = await nameDoc(normName(c.value)).get();
-      return snap.exists ? { ok: false, error: "Esse nome já está em uso." } : { ok: true };
+      // indisponível SOMENTE se já foi confirmado por alguém
+      if (snap.exists && snap.data().verified === true) return { ok: false, error: "Esse nome já está em uso." };
+      return { ok: true };
     } catch (e) { return { ok: false, error: "Sem conexão para verificar o nome." }; }
+  }
+
+  /* Trava o nome para a conta quando o e-mail é confirmado.
+     - Reclama o nome se estiver livre OU pertencer a uma conta não confirmada.
+     - Se já foi confirmado por OUTRA pessoa, sinaliza que precisa renomear. */
+  async function claimVerifiedName() {
+    var u = auth.currentUser;
+    if (!u || !u.emailVerified || !cache) return { ok: true };
+    var key = normName(cache.name);
+    try {
+      var result = await fdb.runTransaction(async function (tx) {
+        var snap = await tx.get(nameDoc(key));
+        if (snap.exists && snap.data().verified === true && snap.data().uid !== u.uid) return { taken: true };
+        tx.set(nameDoc(key), { uid: u.uid, email: cache.email, name: cache.name, verified: true });
+        return { taken: false };
+      });
+      return result.taken ? { ok: false, needsRename: true } : { ok: true };
+    } catch (e) { return { ok: true }; } // falha de claim não bloqueia o acesso
+  }
+
+  /* Troca o nome da conta (usado quando o nome foi confirmado por outra pessoa). */
+  async function changeName(newName) {
+    var u = auth.currentUser;
+    if (!u || !cache) return { ok: false, error: "Ninguém está logado." };
+    var c = validName(newName); if (!c.ok) return { ok: false, error: c.error };
+    var newKey = normName(c.value);
+    var oldKey = normName(cache.name);
+    try {
+      var res = await fdb.runTransaction(async function (tx) {
+        var newSnap = await tx.get(nameDoc(newKey));
+        var oldSnap = oldKey !== newKey ? await tx.get(nameDoc(oldKey)) : null;
+        if (newSnap.exists && newSnap.data().verified === true && newSnap.data().uid !== u.uid) return { taken: true };
+        tx.set(nameDoc(newKey), { uid: u.uid, email: cache.email, name: c.value, verified: !!u.emailVerified });
+        tx.set(userDoc(u.uid), { name: c.value, nameKey: newKey }, { merge: true });
+        if (oldSnap && oldSnap.exists && oldSnap.data().uid === u.uid) tx.delete(nameDoc(oldKey));
+        return { taken: false };
+      });
+      if (res.taken) return { ok: false, error: "Esse nome já está em uso." };
+      cache.name = c.value; saveCacheLocal();
+      return { ok: true };
+    } catch (e) { return { ok: false, error: "Erro ao trocar o nome." }; }
   }
 
   async function resendVerification() {
@@ -252,13 +299,16 @@
     try { await auth.sendPasswordResetEmail(email); return { ok: true, emailHint: maskEmail(email) }; }
     catch (e) { return { ok: false, error: mapAuthError(e) }; }
   }
-  // recarrega o usuário do servidor e devolve se o e-mail já foi verificado
+  // recarrega o usuário; se confirmado, TRAVA o nome. Devolve { verified, needsRename }.
   async function reloadVerified() {
     var u = auth.currentUser;
-    if (!u) return false;
+    if (!u) return { verified: false, needsRename: false };
     try { await u.reload(); } catch (e) {}
-    if (cache) { cache.emailVerified = !!auth.currentUser.emailVerified; saveCacheLocal(); }
-    return !!auth.currentUser.emailVerified;
+    var verified = !!auth.currentUser.emailVerified;
+    if (cache) { cache.emailVerified = verified; saveCacheLocal(); }
+    var needsRename = false;
+    if (verified) { var claim = await claimVerifiedName(); needsRename = !!(claim && claim.needsRename); }
+    return { verified: verified, needsRename: needsRename };
   }
 
   function publicUser() {
@@ -330,8 +380,8 @@
       ready: false, backend: "none", error: msg,
       auth: { register: fail, login: fail, logout: function () {}, isLoggedIn: function () { return false; },
         userId: function () { return null; }, nameAvailable: function () { return Promise.resolve({ ok: false, error: msg }); },
-        validName: validName, resendVerification: fail, reloadVerified: function () { return Promise.resolve(false); },
-        isEmailVerified: function () { return false; } },
+        validName: validName, resendVerification: fail, reloadVerified: function () { return Promise.resolve({ verified: false, needsRename: false }); },
+        changeName: fail, sendPasswordResetByName: fail, isEmailVerified: function () { return false; } },
       me: function () { return null; },
       data: { meta: function () { return null; }, setMeta: function () {}, addPoints: function () {}, shelf: function () { return []; },
         setShelf: function () {}, inShelf: function () { return false; }, addToShelf: function () {}, removeFromShelf: function () {},
@@ -354,6 +404,7 @@
       validPassword: validPassword,
       resendVerification: resendVerification,
       reloadVerified: reloadVerified,
+      changeName: changeName,
       sendPasswordResetByName: sendPasswordResetByName,
       isEmailVerified: function () { return !!(cache && cache.emailVerified); },
     },

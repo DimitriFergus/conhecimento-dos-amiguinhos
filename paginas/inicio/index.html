@@ -440,6 +440,19 @@
       <button class="btn btn-solid btn-block" id="forgotSend">Enviar link de recuperação</button>
       <p class="modal-switch"><button type="button" class="link-btn" id="forgotBack">Voltar ao login</button></p>
     </div>
+
+    <!-- Painel de renomear (nome confirmado por outra pessoa nesse meio tempo) -->
+    <div class="verify-panel" id="renamePanel" hidden>
+      <div class="verify-icon" aria-hidden="true">✏️</div>
+      <h4>Escolha um novo nome</h4>
+      <p>Enquanto você confirmava, esse nome foi confirmado por outra pessoa. Escolha um novo nome para a sua conta:</p>
+      <label class="field" style="text-align:left; margin-bottom:14px;">
+        <span>Novo nome</span>
+        <input type="text" id="renameInput" autocomplete="username" placeholder="Só letras, 2 a 20" maxlength="20" />
+        <small class="field-hint" id="renameHint"></small>
+      </label>
+      <button class="btn btn-solid btn-block" id="renameSave">Salvar e entrar</button>
+    </div>
   </div>
 </div>
 
