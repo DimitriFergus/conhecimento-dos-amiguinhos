@@ -1,4 +1,4 @@
-# Conhecimento dos Amiguinhos 📚
+# Códice 📚
 
 Clube do livro gratuito — site estático com **cadastro/login por conta**, **biblioteca de PDFs**, **leitor com medição de progresso**, **desafios de vocabulário**, **ranking** e **recomendações**.
 

@@ -1,7 +1,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta name="description" content="Sua área do Conhecimento dos Amiguinhos — estante, desafios do Freud, ranking e progresso." />
-<title>Minha área — Conhecimento dos Amiguinhos</title>
+<meta name="description" content="Sua área do Códice — estante, desafios do Freud, ranking e progresso." />
+<title>Minha área — Códice</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -17,16 +17,25 @@
   <!-- ===================== SIDEBAR ===================== -->
   <aside class="sidebar" id="sidebar">
     <a href="../inicio/index.html" class="side-brand" data-magnetic aria-label="Voltar ao site">
-      <span class="brand-mark" aria-hidden="true"><svg class="logo-book" viewBox="0 0 40 32"><path class="lb-cover" d="M20 7C14 3 5 3 2 5L2 27C5 25 14 25 20 29C26 25 35 25 38 27L38 5C35 3 26 3 20 7Z"/><line class="lb-spine" x1="20" y1="7" x2="20" y2="29"/><path class="lb-line l1" d="M6 12H16"/><path class="lb-line l2" d="M6 16H16"/><path class="lb-line r1" d="M24 12H34"/><path class="lb-line r2" d="M24 16H34"/></svg></span>
-      <span class="side-brand-txt"><strong>Conhecimento</strong><small>dos Amiguinhos</small></span>
+      <span class="brand-mark" aria-hidden="true"><svg class="logo-book" viewBox="0 0 40 34"><path class="lb-cover" d="M20 9C15 6 7 6 3 8L3 28C7 26 15 26 20 29C25 26 33 26 37 28L37 8C33 6 25 6 20 9Z"/><line class="lb-spine" x1="20" y1="9" x2="20" y2="29"/><path class="lb-ribbon" d="M25.5 6.5L30.5 6.5L30.5 20L28 16.5L25.5 20Z"/></svg></span>
+      <span class="side-brand-txt"><strong>Códice</strong><small>clube de leitura</small></span>
     </a>
 
     <!-- Perfil -->
     <div class="profile">
-      <button class="avatar" id="avatar" aria-label="Trocar foto de perfil">
-        <span class="avatar-init" id="avatarInit">A</span>
-        <span class="avatar-edit" aria-hidden="true">Trocar foto</span>
-      </button>
+      <div class="avatar-hover" id="avatarHover">
+        <button class="avatar" id="avatar" aria-label="Trocar foto de perfil">
+          <span class="avatar-init" id="avatarInit">A</span>
+          <span class="avatar-edit" aria-hidden="true">Trocar foto</span>
+        </button>
+        <!-- Popover: bio rápida + favoritos (aparece após 1s de hover) -->
+        <div class="avatar-pop" id="avatarPop" aria-hidden="true">
+          <strong class="ap-name" id="apName">Nome</strong>
+          <p class="ap-bio" id="apBio">Sem bio ainda.</p>
+          <span class="ap-label">Livros favoritos</span>
+          <div class="ap-favs" id="apFavs"></div>
+        </div>
+      </div>
       <input type="file" id="avatarInput" accept="image/*" hidden />
       <h2 class="profile-name" id="profileName">Amiguinho</h2>
       <p class="profile-handle" id="profileHandle">@leitor</p>
@@ -146,6 +155,11 @@
         <p class="view-sub">Aqui estão todos os livros do clube, categorizados. Clique em <strong>adicionar</strong> e ele vai direto para a sua estante.</p>
       </div>
 
+      <div class="alex-search">
+        <span class="alex-search-ico" aria-hidden="true">🔍</span>
+        <input type="search" id="alexSearch" placeholder="Buscar por título ou autor…" autocomplete="off" />
+      </div>
+
       <div class="filters" id="alexFilters" role="tablist" aria-label="Filtrar por seção">
         <button class="filter is-active" data-filter="all">Todos</button>
         <button class="filter" data-filter="ficcao">Ficção científica</button>
@@ -157,6 +171,7 @@
       </div>
 
       <div class="alex-grid" id="alexGrid" aria-live="polite"><!-- injetado --></div>
+      <p class="alex-empty" id="alexEmpty" hidden>Nenhum livro encontrado para essa busca.</p>
     </section>
 
     <!-- ========== VIEW: DESAFIOS ========== -->
@@ -192,29 +207,73 @@
     <section class="view" data-view="perfil">
       <div class="view-head reveal">
         <span class="section-idx">Perfil</span>
-        <h1 class="view-title">Sua carteira de amiguinho</h1>
+        <h1 class="view-title">Seu perfil</h1>
+        <p class="view-sub">Personalize do seu jeito — foto, bio, livros favoritos, cor e conquistas.</p>
       </div>
-      <div class="profile-grid reveal">
-        <div class="pcard">
-          <button class="avatar avatar-lg" id="avatarBig" aria-label="Trocar foto de perfil">
+
+      <!-- Cartão de perfil (estilo social) -->
+      <div class="profile-card reveal">
+        <div class="pc-banner" id="pcBanner"></div>
+        <div class="pc-body">
+          <button class="avatar avatar-lg pc-avatar" id="avatarBig" aria-label="Trocar foto de perfil">
             <span class="avatar-init" id="avatarInitBig">A</span>
             <span class="avatar-edit" aria-hidden="true">Trocar foto</span>
           </button>
+          <div class="pc-name-row">
+            <h2 class="pc-name" id="pcName">Nome</h2>
+            <span class="pc-badge" id="pcBadge" title="Conta confirmada">✓</span>
+            <span class="pc-lvl" id="pcLvl">LVL 1</span>
+          </div>
+          <p class="pc-bio" id="pcBio">Sem bio ainda.</p>
+        </div>
+      </div>
+
+      <div class="profile-grid reveal">
+        <div class="pcard">
+          <h3>Personalizar</h3>
           <label class="pfield">
-            <span>Nome de leitor</span>
-            <input type="text" id="nameInput" placeholder="Seu nome" />
+            <span>Bio</span>
+            <textarea id="bioInput" maxlength="160" rows="3" placeholder="Fale de você em uma frase…"></textarea>
+            <small class="pfield-count" id="bioCount">0/160</small>
           </label>
-          <button class="btn btn-solid btn-block" id="saveName">Salvar nome</button>
+          <span class="pfield-label">Cor do fundo</span>
+          <div class="color-swatches" id="colorSwatches"></div>
+          <button class="btn btn-solid btn-block" id="saveProfile" style="margin-top:16px;">Salvar alterações</button>
         </div>
         <div class="pcard pcard-stats">
           <h3>Sua evolução</h3>
           <div class="pstat"><span>Nível</span><b id="pLvl">1</b></div>
           <div class="pstat"><span>Pontos totais</span><b id="pPts">0</b></div>
           <div class="pstat"><span>Livros na estante</span><b id="pBooks">0</b></div>
-          <div class="pstat"><span>Desafios concluídos</span><b id="pQuiz">0</b></div>
+          <div class="pstat"><span>Páginas lidas (estim.)</span><b id="pPages">0</b></div>
           <div class="pstat"><span>Posição no ranking</span><b id="pRank">#0</b></div>
         </div>
       </div>
+
+      <!-- Livros favoritos -->
+      <div class="block-head reveal">
+        <h3>Livros favoritos</h3>
+        <span class="reco-why">favorite pelo ♥ no card de cada livro</span>
+      </div>
+      <div class="fav-grid" id="favGrid"></div>
+
+      <!-- Conquistas -->
+      <div class="block-head reveal">
+        <h3>Conquistas</h3>
+        <span class="reco-why" id="achvCount"></span>
+      </div>
+      <div class="achv-grid" id="achvGrid"></div>
+
+      <!-- Frases & anotações -->
+      <div class="block-head reveal">
+        <h3>Frases &amp; anotações</h3>
+        <span class="reco-why">trechos que você amou</span>
+      </div>
+      <div class="quotes-add">
+        <input type="text" id="quoteText" placeholder="Escreva uma frase ou anotação…" maxlength="280" />
+        <button class="btn btn-solid" id="quoteAdd">Adicionar</button>
+      </div>
+      <div class="quotes-list" id="quotesList"></div>
     </section>
 
   </main>

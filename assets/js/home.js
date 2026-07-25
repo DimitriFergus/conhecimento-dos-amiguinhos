@@ -1,5 +1,5 @@
 /* ============================================================
-   CONHECIMENTO DOS AMIGUINHOS — interações (vanilla JS)
+   CÓDICE — interações (vanilla JS)
    ============================================================ */
 (function () {
   "use strict";

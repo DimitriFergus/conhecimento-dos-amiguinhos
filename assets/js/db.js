@@ -96,7 +96,8 @@
 
   function blankCache(fbUser, name) {
     return { uid: fbUser.uid, name: name || "Amiguinho", email: fbUser.email, emailVerified: !!fbUser.emailVerified,
-      points: 0, quizDone: 0, avatar: null, shelf: [], history: {} };
+      points: 0, quizDone: 0, avatar: null, shelf: [], history: {},
+      bio: "", favorites: [], bgColor: null, quotes: [] };
   }
 
   async function hydrate(fbUser) {
@@ -112,6 +113,10 @@
       avatar: d.avatar || null,
       shelf: Array.isArray(d.shelf) ? d.shelf : [],
       history: d.history && typeof d.history === "object" ? d.history : {},
+      bio: typeof d.bio === "string" ? d.bio : "",
+      favorites: Array.isArray(d.favorites) ? d.favorites : [],
+      bgColor: d.bgColor || null,
+      quotes: Array.isArray(d.quotes) ? d.quotes : [],
     };
     saveCacheLocal();
   }
@@ -130,6 +135,7 @@
     userDoc(cache.uid).set({
       points: cache.points, quizDone: cache.quizDone, avatar: cache.avatar,
       shelf: cache.shelf, history: cache.history,
+      bio: cache.bio || "", favorites: cache.favorites || [], bgColor: cache.bgColor || null, quotes: cache.quotes || [],
     }, { merge: true }).catch(function () {});
   }
   window.addEventListener("pagehide", flush);
@@ -343,14 +349,42 @@
     meta: function () {
       if (!cache) return null;
       return { id: cache.uid, name: cache.name, email: cache.email, emailVerified: cache.emailVerified,
-        avatar: cache.avatar, points: cache.points || 0, quizDone: cache.quizDone || 0 };
+        avatar: cache.avatar, points: cache.points || 0, quizDone: cache.quizDone || 0,
+        bio: cache.bio || "", bgColor: cache.bgColor || null };
     },
     setMeta: function (patch) {
       if (!cache) return;
-      if (patch.name != null) cache.name = String(patch.name).trim() || cache.name;
+      // NOME não é editável por aqui (é a chave de login) — só via changeName.
       if (patch.avatar !== undefined) cache.avatar = patch.avatar;
       if (patch.points != null) cache.points = Math.max(0, Math.round(patch.points));
       if (patch.quizDone != null) cache.quizDone = patch.quizDone;
+      if (patch.bio !== undefined) cache.bio = String(patch.bio || "").slice(0, 160);
+      if (patch.bgColor !== undefined) cache.bgColor = patch.bgColor;
+      scheduleSync();
+    },
+
+    /* ---------- perfil: favoritos e frases ---------- */
+    favorites: function () { return cache ? (cache.favorites || []).slice() : []; },
+    isFavorite: function (t) { return cache ? (cache.favorites || []).indexOf(t) >= 0 : false; },
+    toggleFavorite: function (t) {
+      if (!cache) return;
+      var f = cache.favorites || (cache.favorites = []);
+      var i = f.indexOf(t);
+      if (i >= 0) f.splice(i, 1); else if (f.length < 12) f.push(t);
+      scheduleSync();
+    },
+    quotes: function () { return cache ? (cache.quotes || []).slice() : []; },
+    addQuote: function (text, book) {
+      if (!cache) return;
+      var t = String(text || "").trim().slice(0, 280);
+      if (!t) return;
+      (cache.quotes || (cache.quotes = [])).unshift({ text: t, book: String(book || "").slice(0, 80), ts: Date.now() });
+      if (cache.quotes.length > 50) cache.quotes = cache.quotes.slice(0, 50);
+      scheduleSync();
+    },
+    removeQuote: function (ts) {
+      if (!cache) return;
+      cache.quotes = (cache.quotes || []).filter(function (q) { return q.ts !== ts; });
       scheduleSync();
     },
     addPoints: function (n) { if (!cache) return; cache.points = Math.max(0, Math.round((cache.points || 0) + n)); scheduleSync(); },
@@ -385,7 +419,9 @@
       me: function () { return null; },
       data: { meta: function () { return null; }, setMeta: function () {}, addPoints: function () {}, shelf: function () { return []; },
         setShelf: function () {}, inShelf: function () { return false; }, addToShelf: function () {}, removeFromShelf: function () {},
-        history: function () { return {}; }, hist: function () { return { progress: 0, awarded: 0, bookmark: 0 }; }, setHist: function () {} },
+        history: function () { return {}; }, hist: function () { return { progress: 0, awarded: 0, bookmark: 0 }; }, setHist: function () {},
+        favorites: function () { return []; }, isFavorite: function () { return false; }, toggleFavorite: function () {},
+        quotes: function () { return []; }, addQuote: function () {}, removeQuote: function () {} },
       boot: function (cb) { cb(null); },
     };
   }

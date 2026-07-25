@@ -1,5 +1,5 @@
 /* ============================================================
-   CONHECIMENTO DOS AMIGUINHOS — Dashboard
+   CÓDICE — Dashboard
    Sessão em localStorage. Capas via OpenLibrary com fallback.
    ============================================================ */
 (function () {
@@ -151,13 +151,128 @@
     animateNum($("#mBooks"), estante.length);
     $("#mRank").textContent = "#" + rank;
 
-    // perfil view
-    $("#pLvl").textContent = level;
-    $("#pPts").textContent = session.points.toLocaleString("pt-BR");
-    $("#pBooks").textContent = estante.length;
-    $("#pQuiz").textContent = session.quizDone;
-    $("#pRank").textContent = "#" + rank;
-    $("#nameInput").value = session.name;
+    // ---- cartão de perfil (social) ----
+    const meta = CDA.data.meta() || {};
+    const bio = meta.bio || "";
+    const bg = meta.bgColor || "var(--ink)";
+    setText("#pcName", session.name);
+    setText("#pcLvl", "LVL " + level);
+    setText("#pcBio", bio || "Sem bio ainda.");
+    const bn = $("#pcBanner"); if (bn) bn.style.background = bg;
+    const badge = $("#pcBadge"); if (badge) badge.classList.toggle("off", !meta.emailVerified);
+
+    // ---- stats ----
+    const pages = estimatePagesRead();
+    setText("#pLvl", level);
+    setText("#pPts", session.points.toLocaleString("pt-BR"));
+    setText("#pBooks", estante.length);
+    setText("#pPages", pages.toLocaleString("pt-BR"));
+    setText("#pRank", "#" + rank);
+
+    // ---- editor (bio + swatches) ----
+    if (bioInput && document.activeElement !== bioInput) { bioInput.value = bio; const c = $("#bioCount"); if (c) c.textContent = bio.length + "/160"; }
+    renderSwatches(meta.bgColor || null);
+
+    renderFavorites();
+    renderAchievements();
+    renderQuotes();
+    renderAvatarPop();
+  }
+
+  function setText(sel, v) { const el = $(sel); if (el) el.textContent = v; }
+  function escapeHtml(s) { return String(s).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m])); }
+
+  /* páginas lidas (estimativa: progresso × páginas do livro) */
+  function estimatePagesRead() {
+    const h = CDA.data.history();
+    let total = 0;
+    Object.keys(h).forEach((t) => {
+      const pages = (DATA[t] && DATA[t].pages) || 200;
+      total += (Math.min(100, h[t].progress || 0) / 100) * pages;
+    });
+    return Math.round(total);
+  }
+
+  /* cores de fundo do perfil */
+  const BG_COLORS = ["#17130d", "#e8452a", "#2c4b3c", "#2b3a67", "#c5351d", "#7a4b8c", "#1f6f6b", "#b5860b"];
+  function renderSwatches(current) {
+    const wrap = $("#colorSwatches"); if (!wrap) return;
+    if (!current) current = "#17130d";
+    wrap.innerHTML = BG_COLORS.map((c) => `<button class="swatch ${c === current ? "is-active" : ""}" style="background:${c}" data-color="${c}" aria-label="cor ${c}"></button>`).join("");
+    $$(".swatch", wrap).forEach((sw) => sw.addEventListener("click", () => {
+      $$(".swatch", wrap).forEach((x) => x.classList.toggle("is-active", x === sw));
+      const bn = $("#pcBanner"); if (bn) bn.style.background = sw.dataset.color; // preview
+    }));
+  }
+
+  /* livros favoritos */
+  function renderFavorites() {
+    const grid = $("#favGrid"); if (!grid) return;
+    const favs = CDA.data.favorites();
+    if (!favs.length) { grid.innerHTML = `<p class="fav-empty">Você ainda não favoritou nenhum livro. Abra um livro e toque no ♥.</p>`; return; }
+    grid.innerHTML = favs.map((t) => {
+      const b = { t, ...(CATALOG[t] || { a: "", c: "literatura", cat: "", isbn: "" }) };
+      return `<article class="fav-card" data-title="${t}"><div class="shelf-cover cov-${b.c}">${coverInner(b, false)}</div><div class="fav-name">${escapeHtml(t)}</div></article>`;
+    }).join("");
+    $$(".fav-card", grid).forEach((c) => c.addEventListener("click", () => openBookInfo(c.dataset.title)));
+  }
+
+  /* conquistas */
+  const ACHIEVEMENTS = [
+    { ic: "📖", t: "Primeira página", d: "Comece a ler 1 livro", f: (s) => s.started >= 1 },
+    { ic: "🏁", t: "Ponto final", d: "Termine 1 livro", f: (s) => s.finished >= 1 },
+    { ic: "📚", t: "Estante viva", d: "5 livros na estante", f: (s) => s.shelf >= 5 },
+    { ic: "🗃️", t: "Colecionador", d: "10 livros na estante", f: (s) => s.shelf >= 10 },
+    { ic: "🐀", t: "Rato de biblioteca", d: "Leia ~500 páginas", f: (s) => s.pages >= 500 },
+    { ic: "📄", t: "Mil páginas", d: "Leia ~1000 páginas", f: (s) => s.pages >= 1000 },
+    { ic: "🧠", t: "Filósofo", d: "Leia um livro de filosofia", f: (s) => (s.cat.filosofia || 0) >= 1 },
+    { ic: "🚀", t: "Sonhador", d: "Leia ficção científica", f: (s) => (s.cat.ficcao || 0) >= 1 },
+    { ic: "⏳", t: "Viajante do tempo", d: "Leia um livro de história", f: (s) => (s.cat.historia || 0) >= 1 },
+    { ic: "⭐", t: "Curador", d: "Favorite 3 livros", f: (s) => s.favs >= 3 },
+    { ic: "✦", t: "Pensador", d: "Complete 1 desafio", f: (s) => s.quiz >= 1 },
+    { ic: "🔥", t: "Pontuador", d: "Junte 100 pontos", f: (s) => s.points >= 100 },
+    { ic: "💯", t: "Centurião", d: "Leia 100 livros", f: (s) => s.started >= 100 },
+  ];
+  function computeStats() {
+    const h = CDA.data.history();
+    const started = Object.keys(h).filter((t) => (h[t].progress || 0) > 0);
+    const finished = Object.keys(h).filter((t) => (h[t].progress || 0) >= 95);
+    const cat = {};
+    started.forEach((t) => { const c = (CATALOG[t] || {}).c; if (c) cat[c] = (cat[c] || 0) + 1; });
+    return { started: started.length, finished: finished.length, shelf: estante.length, points: session.points, quiz: session.quizDone, pages: estimatePagesRead(), favs: CDA.data.favorites().length, cat: cat };
+  }
+  function renderAchievements() {
+    const grid = $("#achvGrid"); if (!grid) return;
+    const s = computeStats();
+    let unlocked = 0;
+    grid.innerHTML = ACHIEVEMENTS.map((a) => {
+      const ok = a.f(s); if (ok) unlocked++;
+      return `<div class="achv ${ok ? "unlocked" : "locked"}"><span class="achv-ico">${a.ic}</span><span class="achv-txt"><strong>${a.t}</strong><small>${a.d}</small></span></div>`;
+    }).join("");
+    const c = $("#achvCount"); if (c) c.textContent = unlocked + " de " + ACHIEVEMENTS.length + " desbloqueadas";
+  }
+
+  /* frases favoritas */
+  function renderQuotes() {
+    const list = $("#quotesList"); if (!list) return;
+    const qs = CDA.data.quotes();
+    if (!qs.length) { list.innerHTML = `<p class="quotes-empty">Nenhuma frase ainda. Adicione trechos que você amou.</p>`; return; }
+    list.innerHTML = qs.map((q) => `<div class="quote"><button class="quote-del" data-ts="${q.ts}" aria-label="Remover">×</button><p>“${escapeHtml(q.text)}”</p>${q.book ? `<small>${escapeHtml(q.book)}</small>` : ""}</div>`).join("");
+    $$(".quote-del", list).forEach((b) => b.addEventListener("click", () => { CDA.data.removeQuote(Number(b.dataset.ts)); renderQuotes(); }));
+  }
+
+  /* popover do avatar (bio rápida + favoritos) */
+  function renderAvatarPop() {
+    setText("#apName", session.name);
+    const apBio = $("#apBio"); if (apBio) apBio.textContent = (CDA.data.meta().bio) || "Sem bio ainda.";
+    const apFavs = $("#apFavs"); if (!apFavs) return;
+    const favs = CDA.data.favorites().slice(0, 5);
+    if (!favs.length) { apFavs.innerHTML = `<span class="ap-empty">Nenhum ainda</span>`; return; }
+    apFavs.innerHTML = favs.map((t) => {
+      const b = CATALOG[t] || { c: "literatura", isbn: "" };
+      const img = b.isbn ? `<img src="${coverURL(b.isbn)}" alt="" loading="lazy" onerror="this.remove()">` : "";
+      return `<span class="ap-fav cov-${b.c}">${img}${t[0]}</span>`;
+    }).join("");
   }
 
   function applyAvatar(dataUrl) {
@@ -250,12 +365,20 @@
      ============================================================ */
   const CATALOG_LIST = Object.keys(CATALOG).map((t) => ({ t, ...CATALOG[t] }));
   let alexFilter = "all";
+  let alexSearch = "";
+  const normTxt = (s) => String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 
   function inEstante(t) { return (readShelf() || []).includes(t); }
 
   function renderAlexandria() {
     const grid = $("#alexGrid");
-    const list = alexFilter === "all" ? CATALOG_LIST : CATALOG_LIST.filter((b) => b.c === alexFilter);
+    const q = normTxt(alexSearch);
+    const list = CATALOG_LIST.filter((b) => {
+      if (alexFilter !== "all" && b.c !== alexFilter) return false;
+      if (q && !(normTxt(b.t).includes(q) || normTxt(b.a).includes(q))) return false;
+      return true;
+    });
+    const empty = $("#alexEmpty"); if (empty) empty.hidden = list.length !== 0;
     grid.innerHTML = list.map((b, i) => {
       const added = inEstante(b.t);
       return `
@@ -293,6 +416,8 @@
     renderAlexandria();
   }
   $$("#alexFilters .filter").forEach((btn) => btn.addEventListener("click", () => setAlexFilter(btn.dataset.filter)));
+  const alexSearchInput = $("#alexSearch");
+  if (alexSearchInput) alexSearchInput.addEventListener("input", () => { alexSearch = alexSearchInput.value; renderAlexandria(); });
 
   function refreshAll() {
     estante = loadEstante();
@@ -358,10 +483,12 @@
     // ações
     const acts = [];
     const readLabel = h.progress > 0 ? "Continuar lendo →" : "Ler agora →";
+    const isFav = CDA.data.isFavorite(title);
     acts.push(`<button class="btn btn-solid" data-bm-read>${readable ? readLabel : "Abrir no leitor →"}</button>`);
     acts.push(added
       ? `<button class="btn btn-line" data-bm-remove>✕ Tirar da estante</button>`
       : `<button class="btn btn-line" data-bm-add>+ Adicionar à estante</button>`);
+    acts.push(`<button class="btn btn-line bm-fav ${isFav ? "is-fav" : ""}" data-bm-fav>${isFav ? "♥ Favorito" : "♡ Favoritar"}</button>`);
     $("#bmActions").innerHTML = acts.join("");
 
     const actEl = $("#bmActions");
@@ -371,6 +498,13 @@
     if (addBtn) addBtn.addEventListener("click", () => { addToEstante(title); openBookInfo(title); });
     const remBtn = actEl.querySelector("[data-bm-remove]");
     if (remBtn) remBtn.addEventListener("click", () => { removeFromEstante(title); openBookInfo(title); });
+    const favBtn = actEl.querySelector("[data-bm-fav]");
+    if (favBtn) favBtn.addEventListener("click", () => {
+      CDA.data.toggleFavorite(title);
+      renderProfile();
+      showToast(CDA.data.isFavorite(title) ? `"${title}" nos favoritos ♥` : `"${title}" saiu dos favoritos`);
+      openBookInfo(title);
+    });
 
     bmLastFocus = document.activeElement;
     bookModal.classList.add("open");
@@ -560,14 +694,31 @@
     reader.readAsDataURL(file);
   });
 
-  /* ---------- salvar nome ---------- */
-  $("#saveName").addEventListener("click", () => {
-    const v = $("#nameInput").value.trim();
-    if (v.length < 2) { showToast("Coloca um nome de verdade 🙂"); return; }
-    session.name = v; saveSession(session);
-    renderProfile(); renderBoard();
-    showToast("Nome salvo!");
+  /* ---------- personalizar perfil (bio + cor) ---------- */
+  const bioInput = $("#bioInput");
+  if (bioInput) bioInput.addEventListener("input", () => { const c = $("#bioCount"); if (c) c.textContent = bioInput.value.length + "/160"; });
+  const saveProfileBtn = $("#saveProfile");
+  if (saveProfileBtn) saveProfileBtn.addEventListener("click", () => {
+    const bio = bioInput ? bioInput.value : "";
+    const active = $("#colorSwatches .swatch.is-active");
+    const bg = active ? active.dataset.color : null;
+    CDA.data.setMeta({ bio: bio, bgColor: bg });
+    renderProfile();
+    showToast("Perfil atualizado ✅");
   });
+
+  /* ---------- frases favoritas ---------- */
+  const quoteAddBtn = $("#quoteAdd"), quoteText = $("#quoteText");
+  function addQuoteNow() {
+    const v = quoteText.value.trim();
+    if (!v) { showToast("Escreva uma frase primeiro."); return; }
+    CDA.data.addQuote(v);
+    quoteText.value = "";
+    renderQuotes();
+    showToast("Frase salva ✍️");
+  }
+  if (quoteAddBtn) quoteAddBtn.addEventListener("click", addQuoteNow);
+  if (quoteText) quoteText.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); addQuoteNow(); } });
 
   /* ---------- logout com confirmação ---------- */
   const logoutConfirm = $("#logoutConfirm");

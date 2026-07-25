@@ -1,5 +1,5 @@
 /* ============================================================
-   LEITOR DE PDF — Conhecimento dos Amiguinhos
+   LEITOR DE PDF — Códice
    Lê o PDF dentro do site, mede a % pelo scroll e dá
    +10 pontos a cada 10% concluído (uma vez por marco).
    ============================================================ */

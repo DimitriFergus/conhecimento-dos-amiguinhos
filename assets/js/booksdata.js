@@ -1,5 +1,5 @@
 /* ============================================================
-   CONHECIMENTO DOS AMIGUINHOS — Base de informações dos livros
+   CÓDICE — Base de informações dos livros
    Sinopses, dados e temas de cada obra (para os popups e o
    algoritmo de recomendação). Consumido por dashboard.js.
    ============================================================ */
@@ -80,7 +80,7 @@ window.CDA_BOOKS = {
     year: -375, pages: 416, dif: "Densa",
     syn: "Platão parte de uma pergunta simples — o que é a justiça? — e constrói a cidade ideal para respondê-la. No caminho passa pela famosa alegoria da caverna, pela educação dos guardiões e pelo governo dos filósofos, fundando boa parte da filosofia política ocidental.",
     why: "A pedra fundamental da filosofia política. A alegoria da caverna sozinha já vale a leitura.",
-    themes: ["Justiça", "Política", "Conhecimento", "Ética"],
+    themes: ["Justiça", "Política", "Códice", "Ética"],
   },
   "A Era dos Extremos": {
     year: 1994, pages: 632, dif: "Densa",

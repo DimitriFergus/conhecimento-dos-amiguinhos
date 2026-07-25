@@ -726,17 +726,13 @@ button { font-family: inherit; background: none; border: none; color: inherit; }
 /* ============================================================
    LOGO ANIMADA (livro) — substitui as letras
    ============================================================ */
-.logo-book { width: 64%; height: 64%; display: block; overflow: visible; }
+.logo-book { width: 66%; height: 66%; display: block; overflow: visible; }
 .logo-book path, .logo-book line { fill: none; stroke: #f7f2e8; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 .logo-book .lb-cover { fill: rgba(255, 255, 255, .16); }
+.logo-book .lb-ribbon { fill: #f7f2e8; stroke: none; transform-origin: 28px 6px; animation: ribbonSway 3s ease-in-out infinite; }
 .brand-mark .logo-book, .modal-mark .logo-book, .rd-empty-mark .logo-book { animation: logoFloat 4s ease-in-out infinite; }
-.logo-book .lb-line { stroke-width: 1.8; animation: linePulse 2.8s ease-in-out infinite; }
-.logo-book .l1 { animation-delay: 0s; }
-.logo-book .r1 { animation-delay: .18s; }
-.logo-book .l2 { animation-delay: .36s; }
-.logo-book .r2 { animation-delay: .54s; }
 @keyframes logoFloat { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-1.5px) rotate(-1.5deg); } }
-@keyframes linePulse { 0%, 100% { opacity: .3; } 50% { opacity: 1; } }
+@keyframes ribbonSway { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.12); } }
 
 /* Acessibilidade: respeita quem pediu menos movimento */
 @media (prefers-reduced-motion: reduce) {
