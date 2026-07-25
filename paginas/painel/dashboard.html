@@ -248,6 +248,20 @@
 
 <div class="toast" id="toast" aria-live="polite"></div>
 
+<!-- Firebase (contas + banco de dados) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="../../assets/js/db.js"></script>
 <script src="../../assets/js/booksdata.js"></script>
-<script src="../../assets/js/dashboard.js"></script>
+<script>
+  /* Só entra no painel quem está logado E com e-mail confirmado.
+     O app (dashboard.js) só carrega depois que os dados estão prontos. */
+  CDA.boot(function (user) {
+    if (!user) { location.replace("../inicio/index.html"); return; }
+    if (!user.emailVerified) { location.replace("../inicio/index.html?verify=1"); return; }
+    var s = document.createElement("script");
+    s.src = "../../assets/js/dashboard.js";
+    document.body.appendChild(s);
+  });
+</script>

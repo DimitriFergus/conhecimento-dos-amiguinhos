@@ -326,27 +326,47 @@
     const v = nomeInput.value.trim();
     clearTimeout(nameCheckTimer);
     if (!v) { hint.textContent = ""; hint.className = "field-hint"; return; }
-    nameCheckTimer = setTimeout(() => {
-      const r = CDA.auth.nameAvailable(v);
+    nameCheckTimer = setTimeout(async () => {
+      hint.textContent = "verificando…"; hint.className = "field-hint";
+      const r = await CDA.auth.nameAvailable(v);
+      if (nomeInput.value.trim() !== v) return; // o campo mudou enquanto verificava
       hint.textContent = r.ok ? "✓ Nome disponível" : "✕ " + r.error;
       hint.className = "field-hint " + (r.ok ? "ok" : "no");
       nomeInput.classList.toggle("err", !r.ok);
-    }, 250);
+    }, 400);
   });
 
+  /* ---------- painel de verificação de e-mail ---------- */
+  const verifyPanel = $("#verifyPanel");
+  function showVerify(email) {
+    authForm.hidden = true;
+    verifyPanel.hidden = false;
+    modalTitle.style.display = "none";
+    modalSub.style.display = "none";
+    const em = $("#verifyEmail"); if (em) em.textContent = email || "seu e-mail";
+  }
+  function showForm() {
+    verifyPanel.hidden = true;
+    authForm.hidden = false;
+    modalTitle.style.display = "";
+    modalSub.style.display = "";
+  }
+
   function openModal(m) {
+    showForm();
     setMode(m);
     lastFocused = document.activeElement;
     modal.classList.add("open");
     modal.setAttribute("aria-hidden", "false");
     document.body.style.overflow = "hidden";
-    setTimeout(() => authForm.querySelector("input:not([hidden])").focus(), 60);
+    setTimeout(() => { const el = authForm.querySelector("input:not([hidden])"); if (el) el.focus(); }, 60);
   }
   function closeModal() {
     modal.classList.remove("open");
     modal.setAttribute("aria-hidden", "true");
     document.body.style.overflow = "";
     authForm.reset();
+    showForm();
     $$(".field input", authForm).forEach((i) => i.classList.remove("err"));
     if (lastFocused) lastFocused.focus();
   }
@@ -396,23 +416,69 @@
       res = await CDA.auth.login({ name: nome, password: senha });
     }
 
+    authBusy = false;
+    authSubmit.disabled = false;
+    authSubmit.textContent = originalLabel;
+
     if (!res.ok) {
-      authBusy = false;
-      authSubmit.disabled = false;
-      authSubmit.textContent = originalLabel;
       authForm.querySelector('input[name="senha"]').classList.add("err");
       showToast(res.error || "Não foi possível continuar.");
       return;
     }
 
-    showToast(mode === "login" ? `Bem-vindo de volta! 📖` : `Conta criada, ${res.user.name.split(" ")[0]}! 🎉`);
+    // conta nova OU login com e-mail ainda não confirmado → pede verificação
+    if (res.needsVerification) {
+      showToast(mode === "cadastro" ? "Conta criada! Confirme seu e-mail 📧" : "Falta confirmar seu e-mail 📧");
+      showVerify(res.user.email);
+      return;
+    }
+
+    showToast("Bem-vindo de volta! 📖");
     setTimeout(() => { window.location.href = "../painel/dashboard.html"; }, 700);
   });
 
-  // se já estiver logado, os botões "Entrar/Criar conta" viram atalho para o painel
-  if (window.CDA && CDA.auth.isLoggedIn()) {
-    $$("[data-open-modal]").forEach((btn) => {
-      btn.addEventListener("click", (e) => { e.preventDefault(); e.stopImmediatePropagation(); window.location.href = "../painel/dashboard.html"; }, true);
+  /* ---------- botões do painel de verificação ---------- */
+  $("#verifyDone").addEventListener("click", async (e) => {
+    const btn = e.currentTarget;
+    btn.disabled = true; const t = btn.textContent; btn.textContent = "Conferindo…";
+    const verified = await CDA.auth.reloadVerified();
+    btn.disabled = false; btn.textContent = t;
+    if (verified) {
+      showToast("E-mail confirmado! Entrando… ✅");
+      setTimeout(() => { window.location.href = "../painel/dashboard.html"; }, 600);
+    } else {
+      showToast("Ainda não confirmado. Abra o link no seu e-mail (veja o spam também).");
+    }
+  });
+  $("#verifyResend").addEventListener("click", async (e) => {
+    const btn = e.currentTarget; btn.disabled = true;
+    const r = await CDA.auth.resendVerification();
+    btn.disabled = false;
+    showToast(r.ok ? "E-mail reenviado 📨" : (r.error || "Não consegui reenviar agora."));
+  });
+  $("#verifyBack").addEventListener("click", () => {
+    CDA.auth.logout();
+    showForm();
+    setMode("login");
+  });
+
+  /* ---------- estado de login (assíncrono via Firebase) ---------- */
+  if (window.CDA && CDA.boot) {
+    CDA.boot((user) => {
+      if (!user) return;
+      if (user.emailVerified) {
+        // logado e verificado: os botões "Entrar/Criar conta" viram atalho pro painel
+        $$("[data-open-modal]").forEach((btn) => {
+          btn.addEventListener("click", (ev) => { ev.preventDefault(); ev.stopImmediatePropagation(); window.location.href = "../painel/dashboard.html"; }, true);
+        });
+      } else {
+        // logado mas SEM confirmar o e-mail: botões abrem o painel de verificação
+        $$("[data-open-modal]").forEach((btn) => {
+          btn.addEventListener("click", (ev) => { ev.preventDefault(); ev.stopImmediatePropagation(); openModal("login"); showVerify(user.email); }, true);
+        });
+        const params = new URLSearchParams(location.search);
+        if (params.get("verify") === "1") { openModal("login"); showVerify(user.email); }
+      }
     });
   }
 

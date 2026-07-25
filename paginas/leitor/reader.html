@@ -50,8 +50,21 @@
 
 <div class="toast" id="toast" aria-live="polite"></div>
 
-<!-- PDF embutido (base64) + motor PDF.js -->
+<!-- Firebase (contas + banco de dados) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="../../assets/js/db.js"></script>
+<!-- PDF embutido (base64) + motor PDF.js -->
 <script src="../../assets/data/noitesbrancas.data.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script src="../../assets/js/reader.js"></script>
+<script>
+  /* Só lê quem está logado e verificado; carrega o leitor após os dados. */
+  CDA.boot(function (user) {
+    if (!user) { location.replace("../inicio/index.html"); return; }
+    if (!user.emailVerified) { location.replace("../inicio/index.html?verify=1"); return; }
+    var s = document.createElement("script");
+    s.src = "../../assets/js/reader.js";
+    document.body.appendChild(s);
+  });
+</script>

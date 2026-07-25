@@ -1,0 +1,22 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Índice de nomes (nome -> e-mail/uid). Necessário para o login por nome.
+    // - get público: permite resolver UM nome específico (sem estar logado).
+    // - list negado: impede listar/enumerar todos os nomes e e-mails.
+    // - create/update/delete: só o dono (uid dono do registro).
+    match /usernames/{name} {
+      allow get: if true;
+      allow list: if false;
+      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.uid == request.auth.uid;
+    }
+
+    // Dados do usuário: cada conta só lê e escreve o PRÓPRIO documento.
+    match /users/{uid} {
+      allow read:  if request.auth != null && request.auth.uid == uid;
+      allow write: if request.auth != null && request.auth.uid == uid;
+    }
+  }
+}

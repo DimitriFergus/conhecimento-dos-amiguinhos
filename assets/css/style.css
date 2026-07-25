@@ -627,6 +627,13 @@ button { font-family: inherit; background: none; border: none; color: inherit; }
 .modal-switch { text-align: center; font-size: .88rem; color: var(--ink-soft); margin-top: 4px; }
 .link-btn { color: var(--vermelho); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
 
+/* Painel de verificação de e-mail */
+.verify-panel { text-align: center; }
+.verify-panel .verify-icon { font-size: 2.6rem; margin-bottom: 8px; }
+.verify-panel h4 { font-family: var(--serif); font-weight: 900; font-size: 1.5rem; margin-bottom: 8px; }
+.verify-panel > p { color: var(--ink-soft); font-size: .95rem; margin-bottom: 18px; }
+.verify-panel .btn { margin-bottom: 10px; }
+
 /* Toast */
 .toast {
   position: fixed; bottom: 28px; left: 50%; transform: translate(-50%, 120%);

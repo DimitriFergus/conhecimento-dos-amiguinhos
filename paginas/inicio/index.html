@@ -400,12 +400,26 @@
         <button type="button" class="link-btn" id="switchMode">Criar conta</button>
       </p>
     </form>
+
+    <!-- Painel de verificação de e-mail -->
+    <div class="verify-panel" id="verifyPanel" hidden>
+      <div class="verify-icon" aria-hidden="true">📧</div>
+      <h4>Confirme seu e-mail</h4>
+      <p>Enviamos um link de confirmação para <strong id="verifyEmail">seu e-mail</strong>. Abra a mensagem, clique no link e depois volte aqui.</p>
+      <button class="btn btn-solid btn-block" id="verifyDone">Já confirmei — entrar</button>
+      <button class="btn btn-line btn-block" id="verifyResend">Reenviar e-mail</button>
+      <p class="modal-switch"><button type="button" class="link-btn" id="verifyBack">Usar outra conta</button></p>
+    </div>
   </div>
 </div>
 
 <!-- Toast -->
 <div class="toast" id="toast" aria-live="polite"></div>
 
+<!-- Firebase (contas + banco de dados) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="../../assets/js/db.js"></script>
 <script src="../../assets/js/home.js"></script>
 <script>
