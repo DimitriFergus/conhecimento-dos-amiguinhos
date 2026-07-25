@@ -392,8 +392,24 @@
       </label>
       <label class="field">
         <span>Senha</span>
-        <input type="password" name="senha" autocomplete="current-password" placeholder="mínimo 6 caracteres" required minlength="6" />
+        <span class="pw-wrap">
+          <input type="password" name="senha" autocomplete="current-password" placeholder="sua senha" required />
+          <button type="button" class="pw-eye" id="pwEye" aria-label="Mostrar senha" tabindex="-1">👁</button>
+        </span>
       </label>
+
+      <!-- Medidor de força da senha (só no cadastro) -->
+      <div class="pw-meter" id="pwMeter" hidden>
+        <div class="pw-bar"><span id="pwBar"></span></div>
+        <span class="pw-label" id="pwLabel">Força da senha</span>
+        <ul class="pw-reqs" id="pwReqs">
+          <li data-req="len">8+ caracteres</li>
+          <li data-req="upper">1 letra maiúscula</li>
+          <li data-req="digit">1 número</li>
+          <li data-req="special">1 caractere especial</li>
+        </ul>
+      </div>
+
       <button type="submit" class="btn btn-solid btn-block" id="authSubmit">Entrar</button>
       <p class="modal-switch">
         <span id="switchTxt">Ainda não é amiguinho?</span>

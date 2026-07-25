@@ -46,6 +46,9 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+/* o atributo hidden SEMPRE esconde (corrige campos com display: flex/grid) */
+[hidden] { display: none !important; }
+
 :root { color-scheme: light; }
 
 html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
@@ -623,6 +626,33 @@ button { font-family: inherit; background: none; border: none; color: inherit; }
 .field-hint { font-size: .74rem; font-weight: 600; min-height: 1em; }
 .field-hint.ok { color: var(--verde); }
 .field-hint.no { color: var(--vermelho); }
+
+/* ---------- Campo de senha + botão de mostrar ---------- */
+.pw-wrap { position: relative; display: block; }
+.pw-wrap input { width: 100%; padding-right: 44px; }
+.pw-eye {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  width: 30px; height: 30px; display: grid; place-items: center; font-size: 1rem;
+  opacity: .6; border-radius: var(--radius); transition: opacity .2s, background .2s;
+}
+.pw-eye:hover { opacity: 1; background: var(--paper-2); }
+
+/* ---------- Medidor de força da senha ---------- */
+.pw-meter { margin-top: -6px; }
+.pw-bar { height: 7px; border: 1.5px solid var(--ink); border-radius: 40px; overflow: hidden; background: var(--paper-2); }
+.pw-bar span { display: block; height: 100%; width: 0; border-radius: 40px; transition: width .3s var(--ease), background .3s; }
+.pw-bar span.s1 { width: 33%; background: var(--vermelho); }
+.pw-bar span.s2 { width: 66%; background: var(--amarelo); }
+.pw-bar span.s3 { width: 100%; background: var(--verde); }
+.pw-label { font-size: .74rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; display: block; margin-top: 6px; color: var(--ink-soft); }
+.pw-label.s1 { color: var(--vermelho); }
+.pw-label.s2 { color: #b5860b; }
+.pw-label.s3 { color: var(--verde); }
+.pw-reqs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 14px; margin-top: 10px; }
+.pw-reqs li { font-size: .76rem; color: var(--ink-soft); padding-left: 20px; position: relative; transition: color .2s; }
+.pw-reqs li::before { content: "○"; position: absolute; left: 0; font-weight: 700; }
+.pw-reqs li.met { color: var(--verde); }
+.pw-reqs li.met::before { content: "✓"; color: var(--verde); }
 .modal-form .btn { margin-top: 6px; }
 .modal-switch { text-align: center; font-size: .88rem; color: var(--ink-soft); margin-top: 4px; }
 .link-btn { color: var(--vermelho); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }

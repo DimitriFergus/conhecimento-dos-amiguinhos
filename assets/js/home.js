@@ -297,6 +297,8 @@
   const switchMode = $("#switchMode");
   const nomeField = $('.field[data-field="nome"]');
   const emailField = $('.field[data-field="email"]');
+  const senhaInput = authForm.querySelector('input[name="senha"]');
+  const pwMeter = $("#pwMeter"), pwBar = $("#pwBar"), pwLabel = $("#pwLabel"), pwReqs = $("#pwReqs");
   let mode = "login";
   let lastFocused = null;
 
@@ -308,14 +310,48 @@
     authSubmit.textContent = isLogin ? "Entrar" : "Criar conta grátis";
     switchTxt.textContent = isLogin ? "Ainda não é amiguinho?" : "Já tem conta?";
     switchMode.textContent = isLogin ? "Criar conta" : "Entrar";
-    // Login: pede Nome + Senha. Cadastro: pede Nome + E-mail + Senha.
+    // LOGIN = só Nome + Senha. CADASTRO = Nome + E-mail + Senha (com medidor).
     nomeField.hidden = false;
     nomeField.querySelector("input").required = true;
     emailField.hidden = isLogin;
     emailField.querySelector("input").required = !isLogin;
+    senhaInput.setAttribute("autocomplete", isLogin ? "current-password" : "new-password");
+    senhaInput.placeholder = isLogin ? "sua senha" : "crie uma senha forte";
+    if (pwMeter) pwMeter.hidden = isLogin;
     const hint = $("#nomeHint");
     if (hint) hint.textContent = "";
+    updatePwMeter();
   }
+
+  /* ---------- medidor de força da senha (cadastro) ---------- */
+  function pwCheck(pw) {
+    const p = String(pw || "");
+    const met = { len: p.length >= 8, upper: /[A-Z]/.test(p), digit: /[0-9]/.test(p), special: /[^A-Za-z0-9]/.test(p) };
+    const allReq = met.len && met.upper && met.digit && met.special;
+    let level = 0, label = "";
+    if (p) { level = !allReq ? 1 : (p.length >= 12 ? 3 : 2); label = ["", "Fraca", "Média", "Forte"][level]; }
+    return { met, allReq, level, label };
+  }
+  function updatePwMeter() {
+    if (!pwMeter || pwMeter.hidden) return;
+    const r = pwCheck(senhaInput.value);
+    pwBar.className = r.level ? "s" + r.level : "";
+    pwLabel.className = "pw-label" + (r.level ? " s" + r.level : "");
+    pwLabel.textContent = r.label || "Força da senha";
+    ["len", "upper", "digit", "special"].forEach((k) => {
+      const li = pwReqs.querySelector('[data-req="' + k + '"]');
+      if (li) li.classList.toggle("met", !!r.met[k]);
+    });
+  }
+  senhaInput.addEventListener("input", updatePwMeter);
+
+  /* mostrar/ocultar senha */
+  const pwEye = $("#pwEye");
+  if (pwEye) pwEye.addEventListener("click", () => {
+    const toText = senhaInput.type === "password";
+    senhaInput.type = toText ? "text" : "password";
+    pwEye.textContent = toText ? "🙈" : "👁";
+  });
 
   // Checagem do nome em tempo real (só no cadastro): valida e vê se já existe.
   const nomeInput = nomeField.querySelector("input");
@@ -399,9 +435,9 @@
 
     if (!window.CDA) { showToast("Banco de dados indisponível. Recarregue a página."); return; }
 
-    const nome = authForm.nome.value.trim();
-    const email = authForm.email.value.trim();
-    const senha = authForm.senha.value;
+    const nome = nomeInput.value.trim();
+    const email = emailField.querySelector("input").value.trim();
+    const senha = senhaInput.value;
 
     authBusy = true;
     const originalLabel = authSubmit.textContent;

@@ -43,6 +43,16 @@
   function validEmail(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || "").trim()); }
   function normEmail(email) { return String(email || "").trim().toLowerCase(); }
 
+  /* Senha forte: 8+ caracteres, 1 maiúscula, 1 número e 1 símbolo. */
+  function validPassword(pw) {
+    var p = String(pw || "");
+    if (p.length < 8) return { ok: false, error: "A senha precisa de pelo menos 8 caracteres." };
+    if (!/[A-Z]/.test(p)) return { ok: false, error: "A senha precisa de pelo menos 1 letra maiúscula." };
+    if (!/[0-9]/.test(p)) return { ok: false, error: "A senha precisa de pelo menos 1 número." };
+    if (!/[^A-Za-z0-9]/.test(p)) return { ok: false, error: "A senha precisa de pelo menos 1 caractere especial." };
+    return { ok: true };
+  }
+
   /* ---------- mensagens de erro amigáveis ---------- */
   function mapAuthError(e) {
     var c = (e && e.code) || "";
@@ -136,7 +146,8 @@
     var email = normEmail(input.email);
     var password = String(input.password || "");
     if (!validEmail(email)) return { ok: false, error: "E-mail inválido." };
-    if (password.length < 6) return { ok: false, error: "A senha precisa de pelo menos 6 caracteres." };
+    var pwCheck = validPassword(password);
+    if (!pwCheck.ok) return { ok: false, error: pwCheck.error };
 
     // 1) nome disponível? (checagem rápida antes de criar a conta)
     try {
@@ -318,6 +329,7 @@
       userId: function () { return cache ? cache.uid : null; },
       nameAvailable: nameAvailable,
       validName: validName,
+      validPassword: validPassword,
       resendVerification: resendVerification,
       reloadVerified: reloadVerified,
       isEmailVerified: function () { return !!(cache && cache.emailVerified); },
