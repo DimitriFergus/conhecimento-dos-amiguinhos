@@ -587,11 +587,28 @@
   if (sideBrand) sideBrand.addEventListener("click", (e) => { e.preventDefault(); openLogoutConfirm(); });
   $$("[data-confirm-cancel]").forEach((el) => el.addEventListener("click", closeLogoutConfirm));
   document.addEventListener("keydown", (e) => { if (e.key === "Escape" && logoutConfirm.classList.contains("open")) closeLogoutConfirm(); });
+  let leavingAccount = false;
   $("#logoutConfirmYes").addEventListener("click", async (e) => {
     const btn = e.currentTarget; btn.disabled = true; btn.textContent = "Saindo…";
+    leavingAccount = true; // libera a saída (não re-prende o "voltar")
     try { await CDA.auth.logout(); } catch (err) {}
     window.location.href = "../inicio/index.html";
   });
+
+  /* ============================================================
+     INTERCEPTA O BOTÃO "VOLTAR" (←) DO NAVEGADOR
+     Sem isso, o back do Chrome sairia da conta direto. Aqui a
+     gente "prende" o voltar e mostra o pop-up de confirmação.
+     ============================================================ */
+  (function guardBrowserBack() {
+    // adiciona um estado-âncora: o 1º "voltar" cai aqui e não sai da página
+    history.pushState({ cda: "guard" }, "", location.href);
+    window.addEventListener("popstate", function () {
+      if (leavingAccount) return;                 // saída já confirmada
+      history.pushState({ cda: "guard" }, "", location.href); // re-prende
+      if (!logoutConfirm.classList.contains("open")) openLogoutConfirm();
+    });
+  })();
 
   /* ============================================================
      MENU MOBILE
