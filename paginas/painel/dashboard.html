@@ -246,6 +246,20 @@
   </div>
 </div>
 
+<!-- Confirmação de saída da conta -->
+<div class="confirm" id="logoutConfirm" aria-hidden="true">
+  <div class="confirm-backdrop" data-confirm-cancel></div>
+  <div class="confirm-card" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <span class="confirm-emoji" aria-hidden="true">👋</span>
+    <h3 id="confirmTitle">Você quer mesmo sair da sua conta?</h3>
+    <p>Você vai voltar ao site principal e precisará entrar de novo para acessar sua estante.</p>
+    <div class="confirm-actions">
+      <button class="btn btn-line" data-confirm-cancel>Cancelar</button>
+      <button class="btn btn-solid" id="logoutConfirmYes">Sim, sair</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast" aria-live="polite"></div>
 
 <!-- Firebase (contas + banco de dados) -->

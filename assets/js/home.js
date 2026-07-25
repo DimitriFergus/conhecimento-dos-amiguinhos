@@ -318,6 +318,8 @@
     senhaInput.setAttribute("autocomplete", isLogin ? "current-password" : "new-password");
     senhaInput.placeholder = isLogin ? "sua senha" : "crie uma senha forte";
     if (pwMeter) pwMeter.hidden = isLogin;
+    const forgot = $("#modalForgot");
+    if (forgot) forgot.hidden = !isLogin; // "Esqueceu a senha?" só no login
     const hint = $("#nomeHint");
     if (hint) hint.textContent = "";
     updatePwMeter();
@@ -372,20 +374,30 @@
     }, 400);
   });
 
-  /* ---------- painel de verificação de e-mail ---------- */
+  /* ---------- painéis do modal (form / verificação / esqueci senha) ---------- */
   const verifyPanel = $("#verifyPanel");
-  function showVerify(email) {
-    authForm.hidden = true;
-    verifyPanel.hidden = false;
-    modalTitle.style.display = "none";
-    modalSub.style.display = "none";
-    const em = $("#verifyEmail"); if (em) em.textContent = email || "seu e-mail";
-  }
+  const forgotPanel = $("#forgotPanel");
+  function hidePanels() { verifyPanel.hidden = true; forgotPanel.hidden = true; }
   function showForm() {
-    verifyPanel.hidden = true;
+    hidePanels();
     authForm.hidden = false;
     modalTitle.style.display = "";
     modalSub.style.display = "";
+  }
+  function showVerify(email) {
+    authForm.hidden = true; hidePanels(); verifyPanel.hidden = false;
+    modalTitle.style.display = "none"; modalSub.style.display = "none";
+    const em = $("#verifyEmail"); if (em) em.textContent = email || "seu e-mail";
+  }
+  function showForgot() {
+    authForm.hidden = true; hidePanels(); forgotPanel.hidden = false;
+    modalTitle.style.display = "none"; modalSub.style.display = "none";
+    // reseta o painel para o estado inicial
+    const p = forgotPanel.querySelector("p");
+    if (p) p.innerHTML = "Digite seu <strong>nome</strong>. Enviaremos um link de redefinição para o e-mail cadastrado na conta.";
+    const send = $("#forgotSend"); if (send) send.hidden = false;
+    const fn = $("#forgotName");
+    if (fn) { fn.closest(".field").hidden = false; fn.value = nomeInput.value.trim(); setTimeout(() => fn.focus(), 60); }
   }
 
   function openModal(m) {
@@ -492,24 +504,46 @@
     btn.disabled = false;
     showToast(r.ok ? "E-mail reenviado 📨" : (r.error || "Não consegui reenviar agora."));
   });
-  $("#verifyBack").addEventListener("click", () => {
-    CDA.auth.logout();
-    showForm();
-    setMode("login");
+  $("#verifyBack").addEventListener("click", async () => {
+    await CDA.auth.logout();
+    location.reload(); // recomeça limpo (sem handlers de sessão antiga)
   });
 
-  /* ---------- estado de login (assíncrono via Firebase) ---------- */
+  /* ---------- esqueceu a senha ---------- */
+  $("#forgotLink").addEventListener("click", () => showForgot());
+  $("#forgotBack").addEventListener("click", () => { showForm(); setMode("login"); });
+  $("#forgotSend").addEventListener("click", async (e) => {
+    const btn = e.currentTarget;
+    const nome = $("#forgotName").value.trim();
+    if (!nome) { showToast("Digite seu nome."); return; }
+    btn.disabled = true; const t = btn.textContent; btn.textContent = "Enviando…";
+    const r = await CDA.auth.sendPasswordResetByName(nome);
+    btn.disabled = false; btn.textContent = t;
+    if (r.ok) {
+      showToast("Link enviado para " + r.emailHint + " 📨");
+      // mostra confirmação e volta ao login
+      const p = forgotPanel.querySelector("p");
+      if (p) p.innerHTML = "Pronto! Enviamos um link de redefinição para <strong>" + r.emailHint + "</strong>. Abra seu e-mail (e o spam) e crie uma senha nova.";
+      $("#forgotSend").hidden = true;
+      $("#forgotName").closest(".field").hidden = true;
+    } else {
+      showToast(r.error || "Não consegui enviar agora.");
+    }
+  });
+
+  /* ---------- estado de login (assíncrono via Firebase) ----------
+     IMPORTANTE: "Criar conta" SEMPRE abre o pop-up de cadastro.
+     Só o botão "Entrar" vira atalho quando já está logado. */
   if (window.CDA && CDA.boot) {
     CDA.boot((user) => {
       if (!user) return;
+      const loginBtns = $$('[data-open-modal="login"]');
       if (user.emailVerified) {
-        // logado e verificado: os botões "Entrar/Criar conta" viram atalho pro painel
-        $$("[data-open-modal]").forEach((btn) => {
+        loginBtns.forEach((btn) => {
           btn.addEventListener("click", (ev) => { ev.preventDefault(); ev.stopImmediatePropagation(); window.location.href = "../painel/dashboard.html"; }, true);
         });
       } else {
-        // logado mas SEM confirmar o e-mail: botões abrem o painel de verificação
-        $$("[data-open-modal]").forEach((btn) => {
+        loginBtns.forEach((btn) => {
           btn.addEventListener("click", (ev) => { ev.preventDefault(); ev.stopImmediatePropagation(); openModal("login"); showVerify(user.email); }, true);
         });
         const params = new URLSearchParams(location.search);

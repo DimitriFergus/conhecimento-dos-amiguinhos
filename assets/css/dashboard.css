@@ -310,3 +310,21 @@
   .bookmodal-head { grid-template-columns: 110px 1fr; gap: 16px; }
   .bookmodal-card { padding: 24px 20px; box-shadow: 8px 8px 0 var(--ink); }
 }
+
+/* ============================================================
+   CONFIRMAÇÃO DE SAÍDA DA CONTA
+   ============================================================ */
+.confirm { position: fixed; inset: 0; z-index: 1200; display: none; }
+.confirm.open { display: block; }
+.confirm-backdrop { position: absolute; inset: 0; background: rgba(15, 12, 8, .62); backdrop-filter: blur(4px); animation: bmFade .25s; }
+.confirm-card {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: min(420px, calc(100vw - 32px)); background: var(--paper); border: 1.5px solid var(--ink);
+  border-radius: var(--radius); box-shadow: 14px 14px 0 var(--ink); padding: 34px 30px; text-align: center;
+  animation: bmIn .35s var(--ease);
+}
+.confirm-emoji { font-size: 2.6rem; display: block; margin-bottom: 10px; }
+.confirm-card h3 { font-family: var(--serif); font-weight: 900; font-size: 1.5rem; line-height: 1.1; margin-bottom: 10px; }
+.confirm-card p { color: var(--ink-soft); font-size: .95rem; margin-bottom: 24px; }
+.confirm-actions { display: flex; gap: 10px; }
+.confirm-actions .btn { flex: 1; }

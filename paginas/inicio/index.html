@@ -411,6 +411,7 @@
       </div>
 
       <button type="submit" class="btn btn-solid btn-block" id="authSubmit">Entrar</button>
+      <p class="modal-forgot" id="modalForgot"><button type="button" class="link-btn" id="forgotLink">Esqueceu a senha?</button></p>
       <p class="modal-switch">
         <span id="switchTxt">Ainda não é amiguinho?</span>
         <button type="button" class="link-btn" id="switchMode">Criar conta</button>
@@ -425,6 +426,19 @@
       <button class="btn btn-solid btn-block" id="verifyDone">Já confirmei — entrar</button>
       <button class="btn btn-line btn-block" id="verifyResend">Reenviar e-mail</button>
       <p class="modal-switch"><button type="button" class="link-btn" id="verifyBack">Usar outra conta</button></p>
+    </div>
+
+    <!-- Painel de recuperação de senha -->
+    <div class="verify-panel" id="forgotPanel" hidden>
+      <div class="verify-icon" aria-hidden="true">🔑</div>
+      <h4>Recuperar senha</h4>
+      <p>Digite seu <strong>nome</strong>. Enviaremos um link de redefinição para o e-mail cadastrado na conta.</p>
+      <label class="field" style="text-align:left; margin-bottom:14px;">
+        <span>Nome</span>
+        <input type="text" id="forgotName" autocomplete="username" placeholder="Seu nome" maxlength="20" />
+      </label>
+      <button class="btn btn-solid btn-block" id="forgotSend">Enviar link de recuperação</button>
+      <p class="modal-switch"><button type="button" class="link-btn" id="forgotBack">Voltar ao login</button></p>
     </div>
   </div>
 </div>

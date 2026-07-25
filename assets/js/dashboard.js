@@ -569,9 +569,27 @@
     showToast("Nome salvo!");
   });
 
-  /* ---------- logout ---------- */
-  $("#logout").addEventListener("click", () => {
-    CDA.auth.logout();
+  /* ---------- logout com confirmação ---------- */
+  const logoutConfirm = $("#logoutConfirm");
+  function openLogoutConfirm() {
+    logoutConfirm.classList.add("open");
+    logoutConfirm.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+  }
+  function closeLogoutConfirm() {
+    logoutConfirm.classList.remove("open");
+    logoutConfirm.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+  }
+  // a seta "Sair da conta" E a logo (voltar ao site) pedem confirmação
+  $("#logout").addEventListener("click", openLogoutConfirm);
+  const sideBrand = $(".side-brand");
+  if (sideBrand) sideBrand.addEventListener("click", (e) => { e.preventDefault(); openLogoutConfirm(); });
+  $$("[data-confirm-cancel]").forEach((el) => el.addEventListener("click", closeLogoutConfirm));
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && logoutConfirm.classList.contains("open")) closeLogoutConfirm(); });
+  $("#logoutConfirmYes").addEventListener("click", async (e) => {
+    const btn = e.currentTarget; btn.disabled = true; btn.textContent = "Saindo…";
+    try { await CDA.auth.logout(); } catch (err) {}
     window.location.href = "../inicio/index.html";
   });
 

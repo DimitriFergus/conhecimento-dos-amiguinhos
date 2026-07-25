@@ -655,6 +655,7 @@ button { font-family: inherit; background: none; border: none; color: inherit; }
 .pw-reqs li.met::before { content: "✓"; color: var(--verde); }
 .modal-form .btn { margin-top: 6px; }
 .modal-switch { text-align: center; font-size: .88rem; color: var(--ink-soft); margin-top: 4px; }
+.modal-forgot { text-align: center; font-size: .84rem; margin-top: 10px; }
 .link-btn { color: var(--vermelho); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
 
 /* Painel de verificação de e-mail */

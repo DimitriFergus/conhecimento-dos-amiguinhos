@@ -230,6 +230,28 @@
     try { await u.sendEmailVerification(); return { ok: true }; }
     catch (e) { return { ok: false, error: mapAuthError(e) }; }
   }
+
+  // mascara o e-mail para exibir ("joao@gmail.com" -> "jo***@gmail.com")
+  function maskEmail(email) {
+    var s = String(email || "");
+    var at = s.indexOf("@"); if (at < 1) return s;
+    var user = s.slice(0, at), dom = s.slice(at);
+    var keep = Math.min(2, user.length);
+    return user.slice(0, keep) + "***" + dom;
+  }
+
+  // "Esqueceu a senha?" — resolve o NOME -> e-mail e envia o link de redefinição
+  async function sendPasswordResetByName(name) {
+    name = String(name || "").trim();
+    if (!name) return { ok: false, error: "Informe seu nome." };
+    var snap;
+    try { snap = await nameDoc(normName(name)).get(); }
+    catch (e) { return { ok: false, error: "Erro de conexão. Tente de novo." }; }
+    if (!snap.exists) return { ok: false, error: "Não encontramos uma conta com esse nome." };
+    var email = snap.data().email;
+    try { await auth.sendPasswordResetEmail(email); return { ok: true, emailHint: maskEmail(email) }; }
+    catch (e) { return { ok: false, error: mapAuthError(e) }; }
+  }
   // recarrega o usuário do servidor e devolve se o e-mail já foi verificado
   async function reloadVerified() {
     var u = auth.currentUser;
@@ -332,6 +354,7 @@
       validPassword: validPassword,
       resendVerification: resendVerification,
       reloadVerified: reloadVerified,
+      sendPasswordResetByName: sendPasswordResetByName,
       isEmailVerified: function () { return !!(cache && cache.emailVerified); },
     },
     me: publicUser,
