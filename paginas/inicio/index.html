@@ -382,7 +382,9 @@
     <form class="modal-form" id="authForm" novalidate>
       <label class="field" data-field="nome">
         <span>Nome</span>
-        <input type="text" name="nome" autocomplete="username" placeholder="Como te chamam?" required />
+        <input type="text" name="nome" autocomplete="username" placeholder="Só letras, 2 a 20" required
+               minlength="2" maxlength="20" pattern="[A-Za-zÀ-ÖØ-öø-ÿ ]{2,20}" title="Apenas letras (sem números ou símbolos)" />
+        <small class="field-hint" id="nomeHint"></small>
       </label>
       <label class="field" data-field="email">
         <span>E-mail</span>

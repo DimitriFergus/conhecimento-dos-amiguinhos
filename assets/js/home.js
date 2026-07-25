@@ -313,7 +313,26 @@
     nomeField.querySelector("input").required = true;
     emailField.hidden = isLogin;
     emailField.querySelector("input").required = !isLogin;
+    const hint = $("#nomeHint");
+    if (hint) hint.textContent = "";
   }
+
+  // Checagem do nome em tempo real (só no cadastro): valida e vê se já existe.
+  const nomeInput = nomeField.querySelector("input");
+  let nameCheckTimer;
+  nomeInput.addEventListener("input", () => {
+    const hint = $("#nomeHint");
+    if (!hint || mode !== "cadastro" || !window.CDA) { if (hint) hint.textContent = ""; return; }
+    const v = nomeInput.value.trim();
+    clearTimeout(nameCheckTimer);
+    if (!v) { hint.textContent = ""; hint.className = "field-hint"; return; }
+    nameCheckTimer = setTimeout(() => {
+      const r = CDA.auth.nameAvailable(v);
+      hint.textContent = r.ok ? "✓ Nome disponível" : "✕ " + r.error;
+      hint.className = "field-hint " + (r.ok ? "ok" : "no");
+      nomeInput.classList.toggle("err", !r.ok);
+    }, 250);
+  });
 
   function openModal(m) {
     setMode(m);
@@ -373,8 +392,8 @@
     if (mode === "cadastro") {
       res = await CDA.auth.register({ name: nome, email, password: senha });
     } else {
-      // login por NOME (sem precisar do e-mail)
-      res = await CDA.auth.login({ identifier: nome, password: senha });
+      // login APENAS por NOME + senha
+      res = await CDA.auth.login({ name: nome, password: senha });
     }
 
     if (!res.ok) {

@@ -147,15 +147,40 @@
   function loadDB() {
     var db = null;
     try { db = JSON.parse(localStorage.getItem(DB_KEY)); } catch (e) {}
-    if (!db || typeof db !== "object") db = { version: 1, users: {}, emailIndex: {} };
+    if (!db || typeof db !== "object") db = { version: 2, users: {}, emailIndex: {}, nameIndex: {} };
     if (!db.users) db.users = {};
     if (!db.emailIndex) db.emailIndex = {};
+    // índice de nomes (para nomes ÚNICOS) — reconstrói se faltar (migração)
+    if (!db.nameIndex) {
+      db.nameIndex = {};
+      Object.keys(db.users).forEach(function (id) {
+        var u = db.users[id];
+        if (u && u.name) { var k = normName(u.name); if (!db.nameIndex[k]) db.nameIndex[k] = id; }
+      });
+    }
     return db;
   }
   function saveDB(db) { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
 
   function normEmail(email) { return String(email || "").trim().toLowerCase(); }
   function validEmail(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); }
+
+  /* Nome/nickname: chave de login. Normaliza (minúsculas, sem acento,
+     espaços colapsados) para garantir UNICIDADE e evitar confusão
+     ("José", "jose", "JOSÉ" são a MESMA conta). */
+  function normName(name) {
+    return String(name || "").trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\s+/g, " ");
+  }
+  /* Só letras (com acento) e espaços simples. Sem números nem símbolos. 2 a 20 caracteres. */
+  var NAME_RE = /^[A-Za-zÀ-ÖØ-öø-ÿ]+(?: [A-Za-zÀ-ÖØ-öø-ÿ]+)*$/;
+  function validName(name) {
+    var n = String(name || "").trim();
+    if (n.length < 2) return { ok: false, error: "O nome precisa de pelo menos 2 letras." };
+    if (n.length > 20) return { ok: false, error: "O nome pode ter no máximo 20 letras." };
+    if (/[0-9]/.test(n)) return { ok: false, error: "O nome não pode conter números." };
+    if (!NAME_RE.test(n)) return { ok: false, error: "Use apenas letras (sem números ou símbolos)." };
+    return { ok: true, value: n };
+  }
 
   function blankData() {
     // conta nova nasce ZERADA (a Biblioteca de Alexandria é global)
@@ -179,56 +204,54 @@
      API pública — AUTENTICAÇÃO
      ============================================================ */
   async function register(input) {
-    var name = String(input.name || "").trim();
+    var nameCheck = validName(input.name);
+    if (!nameCheck.ok) return { ok: false, error: nameCheck.error };
+    var name = nameCheck.value;
+    var key = normName(name);
     var email = normEmail(input.email);
     var password = String(input.password || "");
 
-    if (name.length < 2) return { ok: false, error: "Coloque seu nome (mín. 2 letras)." };
     if (!validEmail(email)) return { ok: false, error: "E-mail inválido." };
     if (password.length < 6) return { ok: false, error: "A senha precisa de pelo menos 6 caracteres." };
 
     var db = loadDB();
+    // NOME é único (é a chave de login) — bloqueia repetidos
+    if (db.nameIndex[key]) return { ok: false, error: "Esse nome já está em uso. Escolha outro." };
     if (db.emailIndex[email]) return { ok: false, error: "Já existe uma conta com esse e-mail." };
 
     var pass = await hashPassword(password);
     var id = uid();
-    db.users[id] = { id: id, name: name, email: email, pass: pass, createdAt: nowISO(), updatedAt: nowISO(), data: blankData() };
+    db.users[id] = { id: id, name: name, nameKey: key, email: email, pass: pass, emailVerified: false, createdAt: nowISO(), updatedAt: nowISO(), data: blankData() };
     db.emailIndex[email] = id;
+    db.nameIndex[key] = id;
     saveDB(db);
     setSession(id);
     return { ok: true, user: publicUser(db.users[id]) };
   }
 
-  // Login por NOME ou e-mail. Aceita { identifier, password } ou { email, password }.
+  // Login APENAS por NOME + senha (o e-mail não entra aqui).
   async function login(input) {
-    var identifier = String(input.identifier != null ? input.identifier : (input.email || "")).trim();
+    var name = String(input.name != null ? input.name : (input.identifier || "")).trim();
     var password = String(input.password || "");
-    if (!identifier) return { ok: false, error: "Informe seu nome." };
+    if (!name) return { ok: false, error: "Informe seu nome." };
 
     var db = loadDB();
-    var candidates = [];
+    var id = db.nameIndex[normName(name)];
+    var user = id ? db.users[id] : null;
+    if (!user) return { ok: false, error: "Não encontramos uma conta com esse nome." };
 
-    // 1) por e-mail (se o identificador for um e-mail)
-    var asEmail = normEmail(identifier);
-    if (db.emailIndex[asEmail] && db.users[db.emailIndex[asEmail]]) candidates.push(db.users[db.emailIndex[asEmail]]);
+    var ok = await verifyPassword(password, user.pass);
+    if (!ok) return { ok: false, error: "Senha incorreta." };
 
-    // 2) por nome (case-insensitive) — permite entrar só com o nome
-    var lname = identifier.toLowerCase();
-    Object.keys(db.users).forEach(function (id) {
-      var u = db.users[id];
-      if (u && u.name && u.name.trim().toLowerCase() === lname && candidates.indexOf(u) < 0) candidates.push(u);
-    });
+    setSession(id);
+    return { ok: true, user: publicUser(user) };
+  }
 
-    if (!candidates.length) return { ok: false, error: "Não encontramos uma conta com esse nome." };
-
-    // verifica a senha contra cada candidato (resolve nomes repetidos: entra na conta certa)
-    for (var i = 0; i < candidates.length; i++) {
-      if (await verifyPassword(password, candidates[i].pass)) {
-        setSession(candidates[i].id);
-        return { ok: true, user: publicUser(candidates[i]) };
-      }
-    }
-    return { ok: false, error: "Senha incorreta." };
+  // disponibilidade de nome (para checagem em tempo real no cadastro)
+  function nameAvailable(name) {
+    var c = validName(name); if (!c.ok) return { ok: false, error: c.error };
+    var db = loadDB();
+    return db.nameIndex[normName(c.value)] ? { ok: false, error: "Esse nome já está em uso." } : { ok: true };
   }
 
   function logout() { clearSession(); }
@@ -311,6 +334,8 @@
       isLoggedIn: function () { return !!currentUser(); },
       userId: currentUserId,
       guard: guard,
+      nameAvailable: nameAvailable,
+      validName: validName,
     },
     me: function () { return publicUser(currentUser()); },
     data: dataAPI,
