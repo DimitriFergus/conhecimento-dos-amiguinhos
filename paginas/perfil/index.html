@@ -1,0 +1,69 @@
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="Perfil de leitor no Códice — veja o que essa pessoa está lendo, seus favoritos e conquistas." />
+<title>Perfil — Códice</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,900;1,9..144,400;1,9..144,600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../../assets/css/style.css" />
+<link rel="stylesheet" href="../../assets/css/dashboard.css" />
+<script>try{if(localStorage.getItem('cda_theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}</script>
+
+<div class="grain" aria-hidden="true"></div>
+
+<header class="pp-top">
+  <a href="../inicio/index.html" class="pp-brand" aria-label="Códice">
+    <span class="brand-mark" aria-hidden="true"><svg class="logo-book" viewBox="0 0 40 34"><path class="lb-cover" d="M20 9C15 6 7 6 3 8L3 28C7 26 15 26 20 29C25 26 33 26 37 28L37 8C33 6 25 6 20 9Z"/><line class="lb-spine" x1="20" y1="9" x2="20" y2="29"/><path class="lb-ribbon" d="M25.5 6.5L30.5 6.5L30.5 20L28 16.5L25.5 20Z"/></svg></span>
+  </a>
+  <button class="theme-toggle" id="themeToggle" aria-label="Alternar tema claro/escuro">☾</button>
+</header>
+
+<main class="pp-main">
+  <div class="pp-loading" id="ppLoading">Carregando perfil…</div>
+
+  <div class="pp-nf" id="ppNotFound" hidden>
+    <h1>Perfil não encontrado</h1>
+    <p>Esse leitor não existe ou ainda não tem um perfil público.</p>
+    <a class="btn btn-solid" href="../inicio/index.html">Voltar ao Códice</a>
+  </div>
+
+  <article id="ppWrap" hidden>
+    <div class="profile-card">
+      <div class="pc-banner" id="ppBanner"></div>
+      <div class="pc-body">
+        <div class="avatar avatar-lg pc-avatar" id="ppAvatar"><span class="avatar-init" id="ppInit">A</span></div>
+        <div class="pc-name-row">
+          <h2 class="pc-name" id="ppName">Leitor</h2>
+          <span class="pc-badge" title="Membro do Códice">✓</span>
+          <span class="pc-lvl" id="ppLvl">LVL 1</span>
+        </div>
+        <p class="pc-bio" id="ppBio">Sem bio.</p>
+        <div class="pp-metrics" id="ppMetrics"></div>
+      </div>
+    </div>
+
+    <div class="block-head"><h3>Lendo agora</h3></div>
+    <div class="reading" id="ppReading"></div>
+
+    <div class="block-head"><h3>Livros favoritos</h3></div>
+    <div class="fav-grid" id="ppFavs"></div>
+
+    <div class="block-head"><h3>Conquistas</h3><span class="reco-why" id="ppAchvCount"></span></div>
+    <div class="achv-grid" id="ppAchv"></div>
+
+    <div class="block-head"><h3>Frases &amp; anotações</h3></div>
+    <div class="quotes-list" id="ppQuotes"></div>
+  </article>
+</main>
+
+<div class="toast" id="toast" aria-live="polite"></div>
+
+<!-- Firebase + dados (leitura pública) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="../../assets/js/db.js"></script>
+<script src="../../assets/js/catalog.js"></script>
+<script src="../../assets/js/achievements.js"></script>
+<script src="../../assets/js/perfil.js"></script>

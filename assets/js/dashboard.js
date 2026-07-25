@@ -30,33 +30,9 @@
     });
   })();
 
-  /* ---------- Catálogo (com ISBN p/ capas) ---------- */
-  const CATALOG = {
-    "Noites Brancas": { a: "F. Dostoiévski", c: "literatura", cat: "Literatura", isbn: "9780140445770" },
-    "O Mal-Estar na Civilização": { a: "Sigmund Freud", c: "filosofia", cat: "Filosofia", isbn: "9780393301588" },
-    "Sapiens": { a: "Yuval N. Harari", c: "historia", cat: "História", isbn: "9780062316097" },
-    "Duna": { a: "Frank Herbert", c: "ficcao", cat: "Ficção científica", isbn: "9780441013593" },
-    "Fundação": { a: "Isaac Asimov", c: "ficcao", cat: "Ficção científica", isbn: "9780553293357" },
-    "1984": { a: "George Orwell", c: "ficcao", cat: "Ficção científica", isbn: "9780451524935" },
-    "Neuromancer": { a: "William Gibson", c: "ficcao", cat: "Ficção científica", isbn: "9780441569595" },
-    "Hábitos Atômicos": { a: "James Clear", c: "autoajuda", cat: "Auto-ajuda", isbn: "9780735211292" },
-    "O Poder do Agora": { a: "Eckhart Tolle", c: "autoajuda", cat: "Auto-ajuda", isbn: "9781577314806" },
-    "Mindset": { a: "Carol Dweck", c: "autoajuda", cat: "Auto-ajuda", isbn: "9780345472328" },
-    "Assim Falou Zaratustra": { a: "F. Nietzsche", c: "filosofia", cat: "Filosofia", isbn: "9780140441185" },
-    "Meditações": { a: "Marco Aurélio", c: "filosofia", cat: "Filosofia", isbn: "9780140449334" },
-    "A República": { a: "Platão", c: "filosofia", cat: "Filosofia", isbn: "9780140455113" },
-    "A Era dos Extremos": { a: "Eric Hobsbawm", c: "historia", cat: "História", isbn: "9780349106717" },
-    "Armas, Germes e Aço": { a: "Jared Diamond", c: "historia", cat: "História", isbn: "9780393317558" },
-    "Dom Casmurro": { a: "Machado de Assis", c: "literatura", cat: "Literatura", isbn: "9780195106817" },
-    "Grande Sertão: Veredas": { a: "Guimarães Rosa", c: "literatura", cat: "Literatura", isbn: "9780394724782" },
-    "Crime e Castigo": { a: "F. Dostoiévski", c: "literatura", cat: "Literatura", isbn: "9780140449136" },
-    "Cem Anos de Solidão": { a: "G. García Márquez", c: "literatura", cat: "Literatura", isbn: "9780060883287" },
-    "O Homem que Calculava": { a: "Malba Tahan", c: "matematica", cat: "Matemática", isbn: "9780393309348" },
-    "Alex no País dos Números": { a: "Alex Bellos", c: "matematica", cat: "Matemática", isbn: "9781408809594" },
-    "Uma História da Matemática": { a: "Carl B. Boyer", c: "matematica", cat: "Matemática", isbn: "9780471543978" },
-  };
-
-  const CAT_CLASS = { ficcao: "cov-ficcao", autoajuda: "cov-autoajuda", filosofia: "cov-filosofia", historia: "cov-historia", literatura: "cov-literatura", matematica: "cov-matematica" };
+  /* ---------- Catálogo e classes (compartilhado: catalog.js) ---------- */
+  const CATALOG = window.CDA_CATALOG || {};
+  const CAT_CLASS = window.CDA_CAT_CLASS || {};
   const initials = (t) => t.split(" ").filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
 
   /* ============================================================
@@ -218,21 +194,7 @@
   }
 
   /* conquistas */
-  const ACHIEVEMENTS = [
-    { ic: "📖", t: "Primeira página", d: "Comece a ler 1 livro", f: (s) => s.started >= 1 },
-    { ic: "🏁", t: "Ponto final", d: "Termine 1 livro", f: (s) => s.finished >= 1 },
-    { ic: "📚", t: "Estante viva", d: "5 livros na estante", f: (s) => s.shelf >= 5 },
-    { ic: "🗃️", t: "Colecionador", d: "10 livros na estante", f: (s) => s.shelf >= 10 },
-    { ic: "🐀", t: "Rato de biblioteca", d: "Leia ~500 páginas", f: (s) => s.pages >= 500 },
-    { ic: "📄", t: "Mil páginas", d: "Leia ~1000 páginas", f: (s) => s.pages >= 1000 },
-    { ic: "🧠", t: "Filósofo", d: "Leia um livro de filosofia", f: (s) => (s.cat.filosofia || 0) >= 1 },
-    { ic: "🚀", t: "Sonhador", d: "Leia ficção científica", f: (s) => (s.cat.ficcao || 0) >= 1 },
-    { ic: "⏳", t: "Viajante do tempo", d: "Leia um livro de história", f: (s) => (s.cat.historia || 0) >= 1 },
-    { ic: "⭐", t: "Curador", d: "Favorite 3 livros", f: (s) => s.favs >= 3 },
-    { ic: "✦", t: "Pensador", d: "Complete 1 desafio", f: (s) => s.quiz >= 1 },
-    { ic: "🔥", t: "Pontuador", d: "Junte 100 pontos", f: (s) => s.points >= 100 },
-    { ic: "💯", t: "Centurião", d: "Leia 100 livros", f: (s) => s.started >= 100 },
-  ];
+  const ACHIEVEMENTS = window.CDA_ACHIEVEMENTS || [];
   function computeStats() {
     const h = CDA.data.history();
     const started = Object.keys(h).filter((t) => (h[t].progress || 0) > 0);
@@ -669,6 +631,30 @@
     window.scrollTo({ top: 0, behavior: prefersReduced ? "auto" : "smooth" });
     closeSidebar();
     reobserveReveals();
+    if (name === "comunidade") renderCommunity();
+  }
+
+  /* ---------- Comunidade (diretório de perfis públicos) ---------- */
+  async function renderCommunity() {
+    const grid = $("#communityGrid"), empty = $("#communityEmpty");
+    if (!grid) return;
+    grid.innerHTML = `<p class="community-loading">Carregando leitores…</p>`;
+    if (empty) empty.hidden = true;
+    const list = await CDA.listProfiles(60);
+    if (!list.length) { grid.innerHTML = ""; if (empty) empty.hidden = false; return; }
+    grid.innerHTML = list.map((p) => {
+      const inits = initials(p.name || "?");
+      const reading = (p.reading || [])[0];
+      const av = p.avatar ? `style="background-image:url(${p.avatar})"` : "";
+      return `<a class="community-card" href="../perfil/index.html?u=${encodeURIComponent(p.nameKey || p.uid)}">
+        <span class="cc-avatar ${p.avatar ? "has-photo" : ""}" ${av}>${p.avatar ? "" : inits}</span>
+        <span class="cc-info">
+          <strong>${escapeHtml(p.name || "Leitor")}</strong>
+          <small>LVL ${p.level || 1} · ${(p.points || 0).toLocaleString("pt-BR")} pts</small>
+          ${reading ? `<span class="cc-reading">📖 ${escapeHtml(reading.t)} · ${reading.p}%</span>` : `<span class="cc-reading cc-idle">escolhendo um livro…</span>`}
+        </span>
+      </a>`;
+    }).join("");
   }
   $$("[data-view]").forEach((el) => {
     if (el.classList.contains("view")) return;
@@ -683,13 +669,27 @@
   avatarInput.addEventListener("change", () => {
     const file = avatarInput.files[0];
     if (!file) return;
-    if (file.size > 3 * 1024 * 1024) { showToast("Imagem muito grande (máx. 3MB)"); return; }
+    if (!/^image\//.test(file.type)) { showToast("Selecione uma imagem."); return; }
     const reader = new FileReader();
     reader.onload = (e) => {
-      session.avatar = e.target.result;
-      saveSession(session);
-      applyAvatar(session.avatar);
-      showToast("Foto de perfil atualizada 📸");
+      const img = new Image();
+      img.onload = () => {
+        // redimensiona/comprime para 256x256 (leve o bastante p/ o Firestore)
+        const S = 256;
+        const canvas = document.createElement("canvas");
+        canvas.width = S; canvas.height = S;
+        const ctx = canvas.getContext("2d");
+        const scale = Math.max(S / img.width, S / img.height);
+        const w = img.width * scale, h = img.height * scale;
+        ctx.drawImage(img, (S - w) / 2, (S - h) / 2, w, h);
+        session.avatar = canvas.toDataURL("image/jpeg", 0.82);
+        saveSession(session);
+        applyAvatar(session.avatar);
+        renderProfile();
+        showToast("Foto de perfil atualizada 📸");
+      };
+      img.onerror = () => showToast("Não consegui abrir essa imagem.");
+      img.src = e.target.result;
     };
     reader.readAsDataURL(file);
   });
@@ -800,6 +800,22 @@
   renderRecs();
   renderBoard();
   reobserveReveals();
+
+  // garante que o PERFIL PÚBLICO exista/atualize ao entrar
+  if (CDA.syncNow) CDA.syncNow();
+
+  /* ---------- compartilhar meu perfil público ---------- */
+  (function setupShare() {
+    const meta = CDA.data.meta(); if (!meta) return;
+    const rel = "../perfil/index.html?u=" + encodeURIComponent(meta.nameKey || meta.id);
+    let abs = rel; try { abs = new URL(rel, location.href).href; } catch (e) {}
+    const link = $("#viewPublicProfile"); if (link) link.href = rel;
+    const copy = $("#copyProfileLink");
+    if (copy) copy.addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(abs); showToast("Link do seu perfil copiado 🔗"); }
+      catch (e) { showToast("Seu link: " + abs); }
+    });
+  })();
 
   // data amigável no topo
   const dias = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];

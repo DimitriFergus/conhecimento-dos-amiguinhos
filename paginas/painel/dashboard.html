@@ -67,6 +67,9 @@
       <button class="side-link" data-view="ranking">
         <span class="ico">▲</span> Ranking
       </button>
+      <button class="side-link" data-view="comunidade">
+        <span class="ico">✷</span> Comunidade
+      </button>
       <button class="side-link" data-view="perfil">
         <span class="ico">●</span> Perfil
       </button>
@@ -203,6 +206,17 @@
       <ol class="board" id="board"></ol>
     </section>
 
+    <!-- ========== VIEW: COMUNIDADE ========== -->
+    <section class="view" data-view="comunidade">
+      <div class="view-head reveal">
+        <span class="section-idx">Comunidade</span>
+        <h1 class="view-title">Quem está lendo no Códice</h1>
+        <p class="view-sub">Veja os outros leitores, o que estão lendo e visite o perfil de cada um.</p>
+      </div>
+      <div class="community-grid" id="communityGrid"><!-- injetado --></div>
+      <p class="community-empty" id="communityEmpty" hidden>Ainda estamos reunindo a comunidade. Volte em breve!</p>
+    </section>
+
     <!-- ========== VIEW: PERFIL ========== -->
     <section class="view" data-view="perfil">
       <div class="view-head reveal">
@@ -225,6 +239,10 @@
             <span class="pc-lvl" id="pcLvl">LVL 1</span>
           </div>
           <p class="pc-bio" id="pcBio">Sem bio ainda.</p>
+          <div class="pc-actions">
+            <a class="btn btn-solid" id="viewPublicProfile" target="_blank" rel="noopener">Ver meu perfil público ↗</a>
+            <button class="btn btn-line" id="copyProfileLink">Copiar link</button>
+          </div>
         </div>
       </div>
 
@@ -326,6 +344,8 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="../../assets/js/db.js"></script>
+<script src="../../assets/js/catalog.js"></script>
+<script src="../../assets/js/achievements.js"></script>
 <script src="../../assets/js/booksdata.js"></script>
 <script>
   /* Só entra no painel quem está logado E com e-mail confirmado.

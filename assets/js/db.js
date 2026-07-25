@@ -137,6 +137,63 @@
       shelf: cache.shelf, history: cache.history,
       bio: cache.bio || "", favorites: cache.favorites || [], bgColor: cache.bgColor || null, quotes: cache.quotes || [],
     }, { merge: true }).catch(function () {});
+    // espelha o PERFIL PÚBLICO (só se o e-mail estiver confirmado)
+    if (cache.emailVerified) {
+      var pub = buildPublicProfile();
+      if (pub) profileDoc(cache.uid).set(pub, { merge: true }).catch(function () {});
+    }
+  }
+
+  function profileDoc(uid) { return fdb.collection("profiles").doc(uid); }
+
+  /* monta a versão PÚBLICA do perfil (sem e-mail; dados que a pessoa expõe) */
+  function buildPublicProfile() {
+    if (!cache) return null;
+    var h = cache.history || {};
+    var BK = window.CDA_BOOKS || {};
+    var reading = Object.keys(h)
+      .filter(function (t) { return (h[t].progress || 0) > 0; })
+      .map(function (t) { return { t: t, p: Math.round(h[t].progress || 0) }; })
+      .sort(function (a, b) { return b.p - a.p; }).slice(0, 8);
+    var pages = 0;
+    Object.keys(h).forEach(function (t) { var pg = (BK[t] && BK[t].pages) || 250; pages += (Math.min(100, h[t].progress || 0) / 100) * pg; });
+    return {
+      uid: cache.uid, name: cache.name, nameKey: normName(cache.name),
+      avatar: cache.avatar || null, bio: cache.bio || "", bgColor: cache.bgColor || null,
+      points: cache.points || 0, level: Math.floor((cache.points || 0) / 500) + 1,
+      favorites: (cache.favorites || []).slice(0, 12),
+      reading: reading,
+      quotes: (cache.quotes || []).slice(0, 12),
+      stats: {
+        started: Object.keys(h).filter(function (t) { return (h[t].progress || 0) > 0; }).length,
+        finished: Object.keys(h).filter(function (t) { return (h[t].progress || 0) >= 95; }).length,
+        pages: Math.round(pages), shelf: (cache.shelf || []).length, quizDone: cache.quizDone || 0,
+      },
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    };
+  }
+
+  /* lê um perfil público por NOME (nameKey) ou uid */
+  async function getPublicProfile(idOrName) {
+    var id = String(idOrName || "").trim();
+    if (!id) return null;
+    var uid = id;
+    try {
+      var uSnap = await nameDoc(normName(id)).get();
+      if (uSnap.exists && uSnap.data().uid) uid = uSnap.data().uid;
+    } catch (e) {}
+    try {
+      var pSnap = await profileDoc(uid).get();
+      return pSnap.exists ? pSnap.data() : null;
+    } catch (e) { return null; }
+  }
+
+  /* lista os perfis (diretório da comunidade), por pontos */
+  async function listProfiles(lim) {
+    try {
+      var q = await fdb.collection("profiles").orderBy("points", "desc").limit(lim || 60).get();
+      var arr = []; q.forEach(function (d) { arr.push(d.data()); }); return arr;
+    } catch (e) { return []; }
   }
   window.addEventListener("pagehide", flush);
   document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden") flush(); });
@@ -348,7 +405,7 @@
   var dataAPI = {
     meta: function () {
       if (!cache) return null;
-      return { id: cache.uid, name: cache.name, email: cache.email, emailVerified: cache.emailVerified,
+      return { id: cache.uid, name: cache.name, nameKey: normName(cache.name), email: cache.email, emailVerified: cache.emailVerified,
         avatar: cache.avatar, points: cache.points || 0, quizDone: cache.quizDone || 0,
         bio: cache.bio || "", bgColor: cache.bgColor || null };
     },
@@ -423,6 +480,9 @@
         favorites: function () { return []; }, isFavorite: function () { return false; }, toggleFavorite: function () {},
         quotes: function () { return []; }, addQuote: function () {}, removeQuote: function () {} },
       boot: function (cb) { cb(null); },
+      getPublicProfile: function () { return Promise.resolve(null); },
+      listProfiles: function () { return Promise.resolve([]); },
+      syncNow: function () {},
     };
   }
 
@@ -447,5 +507,8 @@
     me: publicUser,
     data: dataAPI,
     boot: boot,
+    getPublicProfile: getPublicProfile,
+    listProfiles: listProfiles,
+    syncNow: flush,
   };
 })();
