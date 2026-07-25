@@ -457,3 +457,31 @@
 .pp-main .block-head { margin: 34px 0 16px; }
 .read-item-static { cursor: default; }
 .read-item-static:hover { transform: none; box-shadow: none; }
+
+/* ============================================================
+   HOVERCARD DO RANKING (bio + level + livros ao passar o mouse)
+   ============================================================ */
+.board-ava.has-photo, .rp-avatar.has-photo { background-size: cover; background-position: center; }
+.board-row { position: relative; }
+.board-row:hover { z-index: 6; }
+.rank-pop {
+  position: absolute; left: 46px; top: calc(100% - 12px); width: 300px; max-width: calc(100vw - 40px); z-index: 70;
+  background: var(--paper); border: 1.5px solid var(--ink); border-radius: var(--radius); box-shadow: 10px 10px 0 var(--ink);
+  overflow: hidden; opacity: 0; visibility: hidden; transform: translateY(-8px);
+  transition: opacity .2s, transform .2s var(--ease), visibility 0s .2s;
+}
+/* aparece só depois de ~0.7s de hover */
+.board-row:hover .rank-pop { opacity: 1; visibility: visible; transform: translateY(0); transition: opacity .2s .7s, transform .2s .7s, visibility 0s .7s; }
+.rp-banner { height: 54px; }
+.rp-body { padding: 0 16px 16px; }
+.rp-avatar { width: 60px; height: 60px; border-radius: 50%; border: 3px solid var(--paper); margin-top: -30px; display: grid; place-items: center; font-family: var(--serif); font-weight: 900; font-size: 1.3rem; color: var(--paper); position: relative; }
+.rp-name-row { display: flex; align-items: center; gap: 7px; margin-top: 8px; flex-wrap: wrap; }
+.rp-name-row strong { font-family: var(--serif); font-weight: 900; font-size: 1.1rem; line-height: 1; }
+.rp-badge { width: 17px; height: 17px; border-radius: 50%; background: var(--vermelho); color: var(--paper); display: grid; place-items: center; font-size: .58rem; font-weight: 900; flex-shrink: 0; }
+.rp-lvl { margin-left: auto; font-family: var(--serif); font-weight: 900; font-style: italic; color: var(--vermelho); font-size: .95rem; }
+.rp-bio { font-size: .84rem; color: var(--ink-soft); margin: 9px 0 12px; line-height: 1.42; }
+.rp-books { display: flex; gap: 8px; }
+.rp-book { width: 48px; height: 66px; border: 1.5px solid var(--ink); border-radius: 2px; overflow: hidden; position: relative; display: grid; place-items: center; color: #f2ecdf; font-family: var(--serif); font-weight: 900; font-size: 1rem; }
+.rp-book img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.rp-empty { font-size: .78rem; color: var(--ink-soft); font-style: italic; }
+@media (max-width: 560px) { .rank-pop { left: 4px; } }

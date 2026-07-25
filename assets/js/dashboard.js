@@ -81,14 +81,15 @@
      ============================================================ */
   function buildRank() {
     const base = [
-      { n: "Bruna Camargo", h: "Filosofia · 14 livros", p: 2380, cor: "var(--vermelho)" },
-      { n: "Téo Andrade", h: "Ficção científica · 12 livros", p: 2115, cor: "var(--verde)" },
-      { n: "Lia Fontes", h: "Literatura · 11 livros", p: 1960, cor: "var(--ink)" },
-      { n: "Rafa Nunes", h: "História · 9 livros", p: 1740, cor: "#2b3a67" },
-      { n: "Duda Prado", h: "Matemática · 8 livros", p: 1605, cor: "var(--vermelho-esc)" },
-      { n: "Ícaro Melo", h: "Auto-ajuda · 7 livros", p: 1490, cor: "var(--amarelo)" },
+      { n: "Bruna Camargo", h: "Filosofia · 14 livros", p: 2380, cor: "var(--vermelho)", bio: "Nietzsche me quebrou e me reconstruiu.", favs: ["Assim Falou Zaratustra", "O Mal-Estar na Civilização", "Meditações"] },
+      { n: "Téo Andrade", h: "Ficção científica · 12 livros", p: 2115, cor: "var(--verde)", bio: "Vivo em Arrakis, só volto pra comer.", favs: ["Duna", "Fundação", "Neuromancer"] },
+      { n: "Lia Fontes", h: "Literatura · 11 livros", p: 1960, cor: "var(--ink)", bio: "Capitu traiu sim. Me processa.", favs: ["Dom Casmurro", "Crime e Castigo", "Cem Anos de Solidão"] },
+      { n: "Rafa Nunes", h: "História · 9 livros", p: 1740, cor: "#2b3a67", bio: "Entender o passado pra não repetir.", favs: ["Sapiens", "Armas, Germes e Aço", "A Era dos Extremos"] },
+      { n: "Duda Prado", h: "Matemática · 8 livros", p: 1605, cor: "var(--vermelho-esc)", bio: "Os números contam histórias.", favs: ["O Homem que Calculava", "Alex no País dos Números", "Uma História da Matemática"] },
+      { n: "Ícaro Melo", h: "Auto-ajuda · 7 livros", p: 1490, cor: "var(--amarelo)", bio: "1% melhor todo santo dia.", favs: ["Hábitos Atômicos", "Mindset", "O Poder do Agora"] },
     ];
-    const me = { n: session.name, h: `${estante.length} livros na estante`, p: session.points, cor: "var(--vermelho)", me: true };
+    const mm = CDA.data.meta() || {};
+    const me = { n: session.name, h: `${estante.length} livros na estante`, p: session.points, cor: "var(--vermelho)", me: true, bio: mm.bio || "", favs: CDA.data.favorites() };
     const list = base.filter((u) => u.n !== session.name).concat(me);
     list.sort((a, b) => b.p - a.p);
     return list;
@@ -538,18 +539,37 @@
   /* ============================================================
      RENDER: ranking
      ============================================================ */
+  function popCover(title) {
+    const b = CATALOG[title] || { c: "literatura", isbn: "" };
+    const img = b.isbn ? `<img src="${coverURL(b.isbn)}" alt="" loading="lazy" onerror="this.remove()">` : "";
+    return `<span class="rp-book cov-${b.c}">${img}${escapeHtml((title || "?")[0])}</span>`;
+  }
   function renderBoard() {
     const board = $("#board");
     board.innerHTML = buildRank().map((u, i) => {
       const isAmarelo = u.cor === "var(--amarelo)";
+      const lvl = Math.floor((u.p || 0) / 500) + 1;
+      const photo = u.me && session.avatar;
+      const avStyle = photo ? `style="background-image:url(${session.avatar})"` : `style="background:${u.cor};${isAmarelo ? "color:var(--ink)" : ""}"`;
+      const rpAvStyle = photo ? `style="background-image:url(${session.avatar})"` : `style="background:${u.cor};${isAmarelo ? "color:var(--ink)" : ""}"`;
+      const books = (u.favs || []).slice(0, 3).map(popCover).join("") || `<span class="rp-empty">sem favoritos ainda</span>`;
       return `
       <li class="board-row ${u.me ? "is-me" : ""}">
         <span class="board-rank">${String(i + 1).padStart(2, "0")}</span>
         <span class="board-user">
-          <span class="board-ava" style="background:${u.cor};${isAmarelo ? "color:var(--ink)" : ""}">${initials(u.n)}</span>
-          <span class="board-name"><strong>${u.n}${u.me ? " (você)" : ""}</strong><small>${u.h}</small></span>
+          <span class="board-ava ${photo ? "has-photo" : ""}" ${avStyle}>${photo ? "" : initials(u.n)}</span>
+          <span class="board-name"><strong>${escapeHtml(u.n)}${u.me ? " (você)" : ""}</strong><small>${escapeHtml(u.h)}</small></span>
         </span>
         <span class="board-pts">${u.p.toLocaleString("pt-BR")}<small>pontos</small></span>
+        <div class="rank-pop" aria-hidden="true">
+          <div class="rp-banner" style="background:${isAmarelo ? "#b5860b" : u.cor}"></div>
+          <div class="rp-body">
+            <span class="rp-avatar ${photo ? "has-photo" : ""}" ${rpAvStyle}>${photo ? "" : initials(u.n)}</span>
+            <div class="rp-name-row"><strong>${escapeHtml(u.n)}</strong><span class="rp-badge">✓</span><span class="rp-lvl">LVL ${lvl}</span></div>
+            <p class="rp-bio">${u.bio ? escapeHtml(u.bio) : "Sem bio ainda."}</p>
+            <div class="rp-books">${books}</div>
+          </div>
+        </div>
       </li>`;
     }).join("");
   }
