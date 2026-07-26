@@ -228,29 +228,57 @@
   filterBtns.forEach((btn) => btn.addEventListener("click", () => setFilter(btn.dataset.filter)));
   renderBooks("all");
 
-  /* ---------- Esteiras de capas (livros em alta, grande e enxuto) ---------- */
-  (function renderBelts() {
+  /* ---------- Esteiras de capas: rolam sozinhas, param individualmente
+       no hover e podem ser arrastadas (como um celular) ---------- */
+  (function belts() {
     const b1 = $("#belt1"), b2 = $("#belt2");
     if (!b1 || !b2) return;
-    // capas de livros que chamam atenção / estão em alta
     const BELT1 = ["9781649374042", "9781649374172", "9780062060624", "9781501110368", "9780593321201", "9780063021426", "9780525559474", "9780316556347", "9780593135204", "9780804172707", "9788535914849", "9780140449136"];
     const BELT2 = ["9780441013593", "9780062316097", "9788563560247", "9780553213690", "9780441569595", "9780060883287", "9780195106817", "9780140441185", "9780735211292", "9780345472328", "9780140449334", "9780553293357"];
-    const cover = (isbn) => `<span class="belt-cover"><img src="${coverURL(isbn)}" alt="" loading="lazy" onerror="this.remove()" /></span>`;
-    const s1 = BELT1.map(cover).join("");
-    const s2 = BELT2.map(cover).join("");
+    const cover = (isbn) => `<span class="belt-cover"><img src="${coverURL(isbn)}" alt="" loading="lazy" draggable="false" onerror="this.remove()" /></span>`;
+    const s1 = BELT1.map(cover).join(""), s2 = BELT2.map(cover).join("");
     b1.innerHTML = s1 + s1;   // duplicado p/ loop contínuo
     b2.innerHTML = s2 + s2;
+
+    // cada esteira é um contêiner com rolagem horizontal própria
+    setupBelt(b1.parentElement, +1, 0.85);  // 1ª: direita → esquerda
+    setupBelt(b2.parentElement, -1, 0.70);  // 2ª: esquerda → direita
+
+    function setupBelt(belt, dir, speed) {
+      if (!belt) return;
+      let hovering = false, dragging = false, lastX = 0;
+      function normalize() {
+        const half = belt.scrollWidth / 2;
+        if (half <= 0) return;
+        if (belt.scrollLeft >= half) belt.scrollLeft -= half;
+        else if (belt.scrollLeft < 0) belt.scrollLeft += half;
+      }
+      // posição inicial (belt que anda p/ a direita começa no meio)
+      requestAnimationFrame(() => { belt.scrollLeft = dir < 0 ? belt.scrollWidth / 2 : 0; });
+      function tick() {
+        if (!hovering && !dragging && !prefersReduced) { belt.scrollLeft += dir * speed; normalize(); }
+        requestAnimationFrame(tick);
+      }
+      belt.addEventListener("mouseenter", () => { hovering = true; });
+      belt.addEventListener("mouseleave", () => { hovering = false; });
+      belt.addEventListener("pointerdown", (e) => { dragging = true; lastX = e.clientX; belt.classList.add("dragging"); try { belt.setPointerCapture(e.pointerId); } catch (_) {} });
+      belt.addEventListener("pointermove", (e) => { if (!dragging) return; const dx = e.clientX - lastX; lastX = e.clientX; belt.scrollLeft -= dx; normalize(); });
+      const endDrag = () => { dragging = false; belt.classList.remove("dragging"); };
+      belt.addEventListener("pointerup", endDrag);
+      belt.addEventListener("pointercancel", endDrag);
+      requestAnimationFrame(tick);
+    }
   })();
 
-  /* ---------- Cena do hero: alterna as 3 capas a cada volta ---------- */
+  /* ---------- Cena do hero: alterna as capas a cada volta ---------- */
   (function centralCovers() {
     const img = document.getElementById("scCover");
     const book = document.querySelector(".sc-book");
     if (!img || !book) return;
     const covers = [
-      "https://covers.openlibrary.org/b/isbn/9788535914849-L.jpg", // 1984 (olho)
-      "https://covers.openlibrary.org/b/isbn/9788563560247-L.jpg", // O Jogador (espada)
-      "https://covers.openlibrary.org/b/isbn/9780553213690-L.jpg", // A Metamorfose
+      "../../assets/img/1984.jpg",     // 1984 (sua capa)
+      "../../assets/img/ojogador.jpg", // O Jogador (sua capa)
+      "https://covers.openlibrary.org/b/isbn/9780553213690-L.jpg", // A Metamorfose (troque quando tiver o arquivo)
     ];
     covers.forEach((u) => { const p = new Image(); p.src = u; }); // pré-carrega
     let i = 0;
