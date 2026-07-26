@@ -201,6 +201,10 @@
           <span class="cover-author">${b.a}</span>
         </div>
         <div class="book-info">
+          <div class="book-meta">
+            <strong class="book-title">${b.t}</strong>
+            <small class="book-author">${b.a}</small>
+          </div>
           <button class="book-tag" data-tag="${b.c}">#${b.cat}</button>
           <div class="book-dl">
             <span>Baixar PDF</span>

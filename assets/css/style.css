@@ -442,6 +442,9 @@ button { font-family: inherit; background: none; border: none; color: inherit; }
 .book-cover .cover-title { font-family: var(--serif); font-weight: 900; font-size: 1.35rem; line-height: 1.05; letter-spacing: -.01em; }
 .book-cover .cover-author { font-size: .74rem; font-style: italic; opacity: .9; }
 .book-info { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 10px; }
+.book-meta { display: flex; flex-direction: column; gap: 2px; }
+.book-title { font-family: var(--serif); font-weight: 700; font-size: 1rem; line-height: 1.12; letter-spacing: -.005em; }
+.book-author { font-size: .78rem; color: var(--ink-soft); font-style: italic; }
 .book-tag {
   align-self: flex-start; font-size: .64rem; letter-spacing: .08em; text-transform: uppercase; font-weight: 700;
   padding: 4px 9px; border: 1.5px solid var(--ink); border-radius: 40px; cursor: pointer;
