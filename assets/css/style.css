@@ -185,110 +185,57 @@ button { font-family: inherit; background: none; border: none; color: inherit; }
 .hero-lead strong { color: var(--ink); font-weight: 600; }
 .hero-cta { display: flex; gap: 12px; flex-wrap: wrap; }
 
-/* ---------- Hero demo (animação: clicar no livro → ler PDF → pontos) ---------- */
-.hero-demo { perspective: 1400px; --dd: 7.5s; }
-.demo-window {
-  border: 1.5px solid var(--ink); border-radius: 6px; background: var(--paper-2);
-  box-shadow: 16px 16px 0 var(--ink); overflow: hidden;
-  transform: rotateY(-6deg) rotateX(2deg); transform-style: preserve-3d;
+/* ---------- Hero: cena animada (roda de discussão → zoom → logo) ---------- */
+.hero-demo { perspective: 900px; }
+.scene {
+  position: relative; width: 100%; aspect-ratio: 5 / 4.4; overflow: hidden; --sdur: 11s;
+  background: var(--ink); border: 1.5px solid var(--ink); border-radius: 8px; box-shadow: 16px 16px 0 var(--vermelho);
 }
-.demo-bar {
-  display: flex; align-items: center; gap: 7px; padding: 12px 16px;
-  background: var(--ink); border-bottom: 1.5px solid var(--ink);
-}
-.demo-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--paper); opacity: .5; }
-.demo-dot:first-child { background: var(--vermelho); opacity: 1; }
-.demo-url { margin-left: 10px; font-size: .68rem; letter-spacing: .06em; color: rgba(239,233,221,.7); font-weight: 500; }
-.demo-stage { position: relative; height: 360px; overflow: hidden; background: var(--paper-2); }
+.sc-discuss { position: absolute; inset: 0; }
+.sc-people { position: absolute; inset: 0; animation: scPeople var(--sdur) ease-in-out infinite; }
+.person { position: absolute; transform: translate(-50%, -50%) scale(var(--s, 1)); display: flex; flex-direction: column; align-items: center; animation: personBob 2.4s ease-in-out infinite; }
+.person:nth-child(even) { animation-delay: .6s; }
+.p-head { width: 22px; height: 22px; border-radius: 50%; background: var(--paper); }
+.p-body { width: 40px; height: 26px; border-radius: 22px 22px 7px 7px; background: var(--paper); margin-top: 3px; }
+.p-bubble { position: absolute; bottom: 100%; left: 60%; margin-bottom: 6px; background: var(--paper); border-radius: 12px; border-bottom-left-radius: 3px; padding: 6px 8px; display: flex; gap: 4px; opacity: 0; animation: bubblePop 3.4s ease-in-out infinite; animation-delay: var(--d, 0s); }
+.p-bubble i { width: 5px; height: 5px; border-radius: 50%; background: var(--ink-soft); animation: bubbleDot 1.2s ease-in-out infinite; }
+.p-bubble i:nth-child(2) { animation-delay: .2s; }
+.p-bubble i:nth-child(3) { animation-delay: .4s; }
+.sc-book { position: absolute; left: 50%; top: 50%; width: 118px; aspect-ratio: 3/4; border: 1.5px solid var(--paper); border-radius: 4px; overflow: hidden; background: var(--vermelho); box-shadow: 0 12px 30px rgba(0,0,0,.45); transform: translate(-50%, -50%); animation: scBook var(--sdur) cubic-bezier(.5,0,.2,1) infinite; z-index: 3; }
+.sc-book img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 2; }
+.sc-book-fb { position: absolute; inset: 0; display: grid; place-items: center; color: #f7f2e8; font-family: var(--serif); font-weight: 900; font-size: 1.3rem; text-align: center; padding: 6px; }
+.sc-flash { position: absolute; inset: 0; background: var(--paper); opacity: 0; z-index: 5; pointer-events: none; animation: scFlash var(--sdur) linear infinite; }
+.sc-logo { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; opacity: 0; z-index: 6; animation: scLogo var(--sdur) ease-in-out infinite; }
+.sc-logo .brand-mark.big { width: 94px; height: 94px; }
+.sc-tag { font-family: var(--serif); font-weight: 900; font-size: clamp(1.4rem, 3vw, 2.1rem); color: var(--paper); letter-spacing: -.01em; }
 
-/* Capa do livro (só uma letra) */
-.d-book {
-  position: absolute; top: 50%; left: 50%; width: 148px; aspect-ratio: 3/4;
-  border: 1.5px solid var(--ink); border-radius: 4px; background: var(--vermelho); color: #f7f2e8;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
-  box-shadow: 6px 6px 0 var(--ink); transform: translate(-50%, -50%);
-  animation: dBook var(--dd) var(--ease) infinite;
+@keyframes personBob { 0%, 100% { transform: translate(-50%, -50%) scale(var(--s, 1)); } 50% { transform: translate(-50%, calc(-50% - 4px)) scale(var(--s, 1)); } }
+@keyframes bubbleDot { 0%, 60%, 100% { opacity: .35; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-3px); } }
+@keyframes bubblePop { 0%, 6% { opacity: 0; transform: scale(.5); } 10% { opacity: 1; transform: scale(1); } 38% { opacity: 1; transform: scale(1); } 46%, 100% { opacity: 0; transform: scale(.7); } }
+@keyframes scPeople { 0%, 8% { opacity: 0; } 16% { opacity: 1; } 52% { opacity: 1; } 62%, 100% { opacity: 0; } }
+@keyframes scBook {
+  0% { transform: translate(-50%, -260%) scale(1); opacity: 0; }
+  8% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  54% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  67% { transform: translate(-50%, -50%) scale(3.2); opacity: 1; }
+  71% { transform: translate(-50%, -50%) scale(3.7); opacity: 0; }
+  100% { transform: translate(-50%, -50%) scale(3.7); opacity: 0; }
 }
-.d-letter { font-family: var(--serif); font-weight: 900; font-size: 3.6rem; line-height: 1; }
-.d-book-tag { font-size: .6rem; font-weight: 700; text-transform: uppercase; letter-spacing: .14em; padding: 5px 11px; border: 1.5px solid #f7f2e8; border-radius: 40px; }
+@keyframes scFlash { 0%, 66% { opacity: 0; } 69% { opacity: .9; } 74% { opacity: 0; } 100% { opacity: 0; } }
+@keyframes scLogo { 0%, 68% { opacity: 0; transform: scale(.86); } 74% { opacity: 1; transform: scale(1); } 93% { opacity: 1; transform: scale(1); } 99%, 100% { opacity: 0; transform: scale(.97); } }
 
-/* Cursor */
-.d-cursor { position: absolute; width: 24px; height: 24px; z-index: 8; top: 66%; left: 64%; animation: dCursor var(--dd) var(--ease) infinite; }
-.d-cursor::before {
-  content: ""; position: absolute; inset: 0; background: var(--ink);
-  clip-path: polygon(0 0, 0 78%, 26% 58%, 44% 96%, 62% 88%, 44% 52%, 78% 52%);
-  filter: drop-shadow(0 1px 1px rgba(0,0,0,.35));
-}
-
-/* Leitor de PDF */
-.d-reader {
-  position: absolute; inset: 22px; border: 1.5px solid var(--ink); border-radius: 4px; background: var(--paper);
-  display: flex; flex-direction: column; overflow: hidden; box-shadow: 6px 6px 0 var(--ink);
-  opacity: 0; transform: scale(.9); animation: dReader var(--dd) var(--ease) infinite;
-}
-.d-rbar { height: 9px; background: var(--paper-2); border-bottom: 1.5px solid var(--ink); }
-.d-rfill { display: block; height: 100%; width: 0; background: repeating-linear-gradient(45deg, var(--vermelho) 0 6px, var(--vermelho-esc) 6px 12px); animation: dFill var(--dd) var(--ease) infinite; }
-.d-viewport { flex: 1; overflow: hidden; padding: 0 20px; }
-.d-pages { display: flex; flex-direction: column; gap: 9px; padding-top: 18px; animation: dScroll var(--dd) var(--ease) infinite; }
-.d-line { height: 8px; border-radius: 3px; background: var(--ink-soft); opacity: .38; }
-.d-line.h { height: 13px; width: 52%; background: var(--vermelho); opacity: .85; margin-top: 6px; }
-.d-line.s { width: 94%; } .d-line.m { width: 80%; } .d-line.l { width: 66%; }
-
-/* Popups de pontos */
-.d-pts {
-  position: absolute; right: 18px; z-index: 9; font-size: .74rem; font-weight: 800;
-  background: var(--verde); color: #f7f2e8; padding: 7px 12px; border-radius: 40px;
-  border: 1.5px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); opacity: 0;
-}
-.d-pts.a { top: 58%; animation: dPtsA var(--dd) var(--ease) infinite; }
-.d-pts.b { top: 46%; animation: dPtsB var(--dd) var(--ease) infinite; }
-.d-pts.c { top: 34%; animation: dPtsC var(--dd) var(--ease) infinite; }
-
-@keyframes dBook {
-  0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-  15% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-  20% { transform: translate(-50%, -50%) scale(.92); opacity: 1; }   /* clique */
-  26% { transform: translate(-50%, -50%) scale(1.03); opacity: 1; }
-  33% { transform: translate(-50%, -50%) scale(.35); opacity: 0; }    /* vira PDF */
-  90% { transform: translate(-50%, -50%) scale(.35); opacity: 0; }
-  100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-}
-@keyframes dCursor {
-  0% { top: 66%; left: 64%; opacity: 1; }
-  15% { top: 50%; left: 51%; opacity: 1; }     /* chega na capa */
-  20% { top: 52%; left: 51%; opacity: 1; }     /* clique */
-  24% { top: 50%; left: 51%; opacity: 1; }
-  32% { top: 64%; left: 64%; opacity: 0; }     /* some p/ ler */
-  90% { top: 64%; left: 64%; opacity: 0; }
-  100% { top: 66%; left: 64%; opacity: 1; }
-}
-@keyframes dReader {
-  0%, 27% { opacity: 0; transform: scale(.9); }
-  33% { opacity: 1; transform: scale(1); }
-  86% { opacity: 1; transform: scale(1); }
-  92%, 100% { opacity: 0; transform: scale(.95); }
-}
-@keyframes dFill { 0%, 33% { width: 0; } 86% { width: 100%; } 92%, 100% { width: 0; } }
-@keyframes dScroll { 0%, 33% { transform: translateY(0); } 86% { transform: translateY(-54%); } 92%, 100% { transform: translateY(0); } }
-
-@keyframes dPtsA {
-  0%, 38% { opacity: 0; transform: translateY(8px); }
-  44% { opacity: 1; transform: translateY(0); }
-  52% { opacity: 1; transform: translateY(-8px); }
-  58%, 100% { opacity: 0; transform: translateY(-18px); }
-}
-@keyframes dPtsB {
-  0%, 56% { opacity: 0; transform: translateY(8px); }
-  62% { opacity: 1; transform: translateY(0); }
-  70% { opacity: 1; transform: translateY(-8px); }
-  76%, 100% { opacity: 0; transform: translateY(-18px); }
-}
-@keyframes dPtsC {
-  0%, 74% { opacity: 0; transform: translateY(8px); }
-  80% { opacity: 1; transform: translateY(0); }
-  86% { opacity: 1; transform: translateY(-8px); }
-  90%, 100% { opacity: 0; transform: translateY(-18px); }
-}
+/* ---------- Esteiras de capas (marquee) ---------- */
+.belts { border-top: 1.5px solid var(--ink); border-bottom: 1.5px solid var(--ink); background: var(--paper-2); overflow: hidden; }
+.belt { overflow: hidden; padding: 14px 0; }
+.belt-2 { border-top: 1.5px solid var(--ink); }
+.belt-track { display: flex; gap: 16px; width: max-content; padding-left: 16px; will-change: transform; }
+.belt-1 .belt-track { animation: beltLeft 48s linear infinite; }
+.belt-2 .belt-track { animation: beltRight 48s linear infinite; }
+.belts:hover .belt-track { animation-play-state: paused; }
+.belt-cover { width: 88px; flex-shrink: 0; aspect-ratio: 3/4; border: 1.5px solid var(--ink); border-radius: 2px; overflow: hidden; background: var(--paper); box-shadow: 3px 3px 0 var(--ink); }
+.belt-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+@keyframes beltLeft { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@keyframes beltRight { from { transform: translateX(-50%); } to { transform: translateX(0); } }
 
 /* ============================================================
    MARQUEE
@@ -695,8 +642,8 @@ button { font-family: inherit; background: none; border: none; color: inherit; }
   .nav-links, .nav-actions .btn { display: none; }
   .nav-burger { display: flex; }
   .hero-grid { grid-template-columns: 1fr; gap: 44px; }
-  .hero-demo { order: 2; max-width: 400px; }
-  .demo-window { transform: none; box-shadow: 10px 10px 0 var(--ink); }
+  .hero-demo { order: 2; max-width: 420px; margin: 0 auto; }
+  .scene { box-shadow: 10px 10px 0 var(--vermelho); }
   .feature { grid-template-columns: 1fr; }
   .feature-reverse .feature-copy { order: 0; }
   .feature-mock { max-width: 440px; box-shadow: 8px 8px 0 var(--ink); }

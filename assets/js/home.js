@@ -228,6 +228,17 @@
   filterBtns.forEach((btn) => btn.addEventListener("click", () => setFilter(btn.dataset.filter)));
   renderBooks("all");
 
+  /* ---------- Esteiras de capas (duas direções) ---------- */
+  (function renderBelts() {
+    const b1 = $("#belt1"), b2 = $("#belt2");
+    if (!b1 || !b2) return;
+    const cover = (bk) => `<span class="belt-cover"><img src="${coverURL(bk.isbn)}" alt="" loading="lazy" onerror="this.remove()" /></span>`;
+    const set1 = BOOKS.map(cover).join("");
+    const set2 = BOOKS.slice().reverse().map(cover).join("");
+    b1.innerHTML = set1 + set1;   // duplicado p/ loop contínuo
+    b2.innerHTML = set2 + set2;
+  })();
+
   /* ============================================================
      7. RANKING
      ============================================================ */

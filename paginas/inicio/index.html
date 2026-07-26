@@ -74,59 +74,37 @@
         </div>
       </div>
 
-      <!-- Animação: clicar no livro → abrir PDF → ler → ganhar pontos -->
+      <!-- Animação: roda de discussão → zoom no livro → logo + frase -->
       <div class="hero-demo reveal" aria-hidden="true">
-        <div class="demo-window">
-          <div class="demo-bar">
-            <span class="demo-dot"></span><span class="demo-dot"></span><span class="demo-dot"></span>
-            <span class="demo-url">conhecimento-dos-amiguinhos</span>
-          </div>
-          <div class="demo-stage">
-            <!-- leitor de PDF (aparece após o clique) -->
-            <div class="d-reader">
-              <div class="d-rbar"><span class="d-rfill"></span></div>
-              <div class="d-viewport">
-                <div class="d-pages">
-                  <span class="d-line h"></span>
-                  <span class="d-line s"></span><span class="d-line m"></span><span class="d-line s"></span>
-                  <span class="d-line l"></span><span class="d-line s"></span><span class="d-line m"></span>
-                  <span class="d-line h"></span>
-                  <span class="d-line s"></span><span class="d-line m"></span><span class="d-line l"></span>
-                  <span class="d-line s"></span><span class="d-line m"></span><span class="d-line s"></span>
-                  <span class="d-line h"></span>
-                  <span class="d-line m"></span><span class="d-line s"></span><span class="d-line l"></span>
-                  <span class="d-line s"></span><span class="d-line m"></span>
-                </div>
-              </div>
+        <div class="scene">
+          <div class="sc-discuss">
+            <div class="sc-people">
+              <span class="person" style="left:50%;top:15%;--s:.82"><span class="p-bubble" style="--d:.2s"><i></i><i></i><i></i></span><span class="p-head"></span><span class="p-body"></span></span>
+              <span class="person" style="left:85%;top:32%;--s:.92"><span class="p-bubble" style="--d:1.1s"><i></i><i></i><i></i></span><span class="p-head"></span><span class="p-body"></span></span>
+              <span class="person" style="left:86%;top:72%;--s:1.08"><span class="p-bubble" style="--d:2.1s"><i></i><i></i><i></i></span><span class="p-head"></span><span class="p-body"></span></span>
+              <span class="person" style="left:50%;top:89%;--s:1.2"><span class="p-bubble" style="--d:2.9s"><i></i><i></i><i></i></span><span class="p-head"></span><span class="p-body"></span></span>
+              <span class="person" style="left:14%;top:72%;--s:1.08"><span class="p-bubble" style="--d:1.6s"><i></i><i></i><i></i></span><span class="p-head"></span><span class="p-body"></span></span>
+              <span class="person" style="left:15%;top:32%;--s:.92"><span class="p-bubble" style="--d:.7s"><i></i><i></i><i></i></span><span class="p-head"></span><span class="p-body"></span></span>
             </div>
-            <!-- popups de pontos -->
-            <span class="d-pts a">+10 pts</span>
-            <span class="d-pts b">+10 pts</span>
-            <span class="d-pts c">+10 pts</span>
-            <!-- capa do livro (só a letra) -->
-            <div class="d-book"><span class="d-letter">A</span><span class="d-book-tag">Ler agora</span></div>
-            <!-- cursor que clica -->
-            <div class="d-cursor"></div>
+            <div class="sc-book">
+              <img src="https://covers.openlibrary.org/b/isbn/9780441013593-L.jpg?default=false" alt="" onerror="this.remove()" />
+              <span class="sc-book-fb">Duna</span>
+            </div>
+          </div>
+          <div class="sc-flash"></div>
+          <div class="sc-logo">
+            <span class="brand-mark big" aria-hidden="true"><svg class="logo-book" viewBox="0 0 40 34"><path class="lb-cover" d="M20 9C15 6 7 6 3 8L3 28C7 26 15 26 20 29C25 26 33 26 37 28L37 8C33 6 25 6 20 9Z"/><line class="lb-spine" x1="20" y1="9" x2="20" y2="29"/><path class="lb-ribbon" d="M25.5 6.5L30.5 6.5L30.5 20L28 16.5L25.5 20Z"/></svg></span>
+            <span class="sc-tag">Leia para argumentar.</span>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ===================== MARQUEE ===================== -->
-  <div class="marquee" aria-hidden="true">
-    <div class="marquee-track">
-      <span>Leia mais</span><span class="dot">●</span>
-      <span>Discuta melhor</span><span class="dot">●</span>
-      <span>Pense por conta própria</span><span class="dot">●</span>
-      <span>Vença o argumento</span><span class="dot">●</span>
-      <span>Largue a tela</span><span class="dot">●</span>
-      <span>Leia mais</span><span class="dot">●</span>
-      <span>Discuta melhor</span><span class="dot">●</span>
-      <span>Pense por conta própria</span><span class="dot">●</span>
-      <span>Vença o argumento</span><span class="dot">●</span>
-      <span>Largue a tela</span><span class="dot">●</span>
-    </div>
+  <!-- ===================== ESTEIRAS DE CAPAS ===================== -->
+  <div class="belts" aria-hidden="true">
+    <div class="belt belt-1"><div class="belt-track" id="belt1"></div></div>
+    <div class="belt belt-2"><div class="belt-track" id="belt2"></div></div>
   </div>
 
   <!-- ===================== STATS ===================== -->
