@@ -244,12 +244,12 @@ button { font-family: inherit; background: none; border: none; color: inherit; }
 
 /* ---------- Esteiras de capas (grande e enxuto) ---------- */
 .belts { border-top: 1.5px solid var(--ink); border-bottom: 1.5px solid var(--ink); background: var(--paper-2); overflow: hidden; }
-.belt { overflow-x: auto; overflow-y: hidden; cursor: grab; scrollbar-width: none; -ms-overflow-style: none; touch-action: pan-x; }
+.belt { overflow-x: auto; overflow-y: hidden; scrollbar-width: none; -ms-overflow-style: none; touch-action: pan-x; -webkit-user-select: none; user-select: none; }
 .belt::-webkit-scrollbar { display: none; }
-.belt.dragging { cursor: grabbing; }
 .belt-2 { border-top: 1.5px solid var(--ink); }
 .belt-track { display: flex; align-items: center; gap: 18px; width: max-content; padding: 16px 18px; }
-.belt-track img { -webkit-user-drag: none; user-select: none; pointer-events: none; }
+/* nada dentro da esteira é arrastável/selecionável (mata o "fantasma" da imagem) */
+.belt-cover, .belt-cover img { -webkit-user-drag: none; user-select: none; -webkit-user-select: none; pointer-events: none; }
 .belt-cover { flex-shrink: 0; border: 1.5px solid var(--ink); border-radius: 3px; overflow: hidden; background: var(--paper); box-shadow: 4px 4px 0 var(--ink); }
 .belt-1 .belt-cover { width: 151px; height: 225px; }
 .belt-2 .belt-cover { width: 200px; height: 300px; }

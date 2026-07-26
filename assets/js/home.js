@@ -261,9 +261,16 @@
       }
       belt.addEventListener("mouseenter", () => { hovering = true; });
       belt.addEventListener("mouseleave", () => { hovering = false; });
-      belt.addEventListener("pointerdown", (e) => { dragging = true; lastX = e.clientX; belt.classList.add("dragging"); try { belt.setPointerCapture(e.pointerId); } catch (_) {} });
+      // mata o arraste nativo da imagem (o "fantasma" de copiar)
+      belt.addEventListener("dragstart", (e) => e.preventDefault());
+      belt.addEventListener("pointerdown", (e) => {
+        if (e.pointerType === "touch") return;   // toque: usa o swipe nativo (pan-x)
+        dragging = true; lastX = e.clientX;
+        e.preventDefault();                       // impede seleção/arraste do navegador
+        try { belt.setPointerCapture(e.pointerId); } catch (_) {}
+      });
       belt.addEventListener("pointermove", (e) => { if (!dragging) return; const dx = e.clientX - lastX; lastX = e.clientX; belt.scrollLeft -= dx; normalize(); });
-      const endDrag = () => { dragging = false; belt.classList.remove("dragging"); };
+      const endDrag = () => { dragging = false; };
       belt.addEventListener("pointerup", endDrag);
       belt.addEventListener("pointercancel", endDrag);
       requestAnimationFrame(tick);
