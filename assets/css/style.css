@@ -185,54 +185,67 @@ button { font-family: inherit; background: none; border: none; color: inherit; }
 .hero-lead strong { color: var(--ink); font-weight: 600; }
 .hero-cta { display: flex; gap: 12px; flex-wrap: wrap; }
 
-/* ---------- Hero: cena animada (roda de discussão → zoom → logo) ---------- */
-.hero-demo { perspective: 900px; }
+/* ---------- Hero: cena (discussão → livro abre / câmera entra → logo digitando) ---------- */
+.hero-demo { perspective: 1000px; }
 .scene {
-  position: relative; width: 100%; aspect-ratio: 5 / 4.4; overflow: hidden; --sdur: 11s;
-  background: var(--ink); border: 1.5px solid var(--ink); border-radius: 8px; box-shadow: 16px 16px 0 var(--vermelho);
+  position: relative; width: 100%; aspect-ratio: 5 / 4.4; overflow: hidden; --sdur: 12s;
+  background: #17130d; border: 1.5px solid var(--ink); border-radius: 8px; box-shadow: 16px 16px 0 var(--vermelho);
 }
-.sc-discuss { position: absolute; inset: 0; }
-.sc-people { position: absolute; inset: 0; animation: scPeople var(--sdur) ease-in-out infinite; }
+.sc-people { position: absolute; inset: 0; z-index: 1; animation: scPeople var(--sdur) ease-in-out infinite; }
 .person { position: absolute; transform: translate(-50%, -50%) scale(var(--s, 1)); display: flex; flex-direction: column; align-items: center; animation: personBob 2.4s ease-in-out infinite; }
 .person:nth-child(even) { animation-delay: .6s; }
-.p-head { width: 22px; height: 22px; border-radius: 50%; background: var(--paper); }
-.p-body { width: 40px; height: 26px; border-radius: 22px 22px 7px 7px; background: var(--paper); margin-top: 3px; }
-.p-bubble { position: absolute; bottom: 100%; left: 60%; margin-bottom: 6px; background: var(--paper); border-radius: 12px; border-bottom-left-radius: 3px; padding: 6px 8px; display: flex; gap: 4px; opacity: 0; animation: bubblePop 3.4s ease-in-out infinite; animation-delay: var(--d, 0s); }
-.p-bubble i { width: 5px; height: 5px; border-radius: 50%; background: var(--ink-soft); animation: bubbleDot 1.2s ease-in-out infinite; }
+.p-head { width: 22px; height: 22px; border-radius: 50%; background: #f7f2e8; }
+.p-body { width: 40px; height: 26px; border-radius: 22px 22px 7px 7px; background: #f7f2e8; margin-top: 3px; }
+.p-bubble { position: absolute; bottom: 100%; left: 60%; margin-bottom: 6px; background: #f7f2e8; border-radius: 12px; border-bottom-left-radius: 3px; padding: 6px 8px; display: flex; gap: 4px; opacity: 0; animation: bubblePop 3.4s ease-in-out infinite; animation-delay: var(--d, 0s); }
+.p-bubble i { width: 5px; height: 5px; border-radius: 50%; background: #8a8172; animation: bubbleDot 1.2s ease-in-out infinite; }
 .p-bubble i:nth-child(2) { animation-delay: .2s; }
 .p-bubble i:nth-child(3) { animation-delay: .4s; }
-.sc-book { position: absolute; left: 50%; top: 50%; width: 118px; aspect-ratio: 3/4; border: 1.5px solid var(--paper); border-radius: 4px; overflow: hidden; background: var(--vermelho); box-shadow: 0 12px 30px rgba(0,0,0,.45); transform: translate(-50%, -50%); animation: scBook var(--sdur) cubic-bezier(.5,0,.2,1) infinite; z-index: 3; }
-.sc-book img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 2; }
-.sc-book-fb { position: absolute; inset: 0; display: grid; place-items: center; color: #f7f2e8; font-family: var(--serif); font-weight: 900; font-size: 1.3rem; text-align: center; padding: 6px; }
-.sc-flash { position: absolute; inset: 0; background: var(--paper); opacity: 0; z-index: 5; pointer-events: none; animation: scFlash var(--sdur) linear infinite; }
-.sc-logo { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; opacity: 0; z-index: 6; animation: scLogo var(--sdur) ease-in-out infinite; }
-.sc-logo .brand-mark.big { width: 94px; height: 94px; }
-.sc-tag { font-family: var(--serif); font-weight: 900; font-size: clamp(1.4rem, 3vw, 2.1rem); color: var(--paper); letter-spacing: -.01em; }
-
-@keyframes personBob { 0%, 100% { transform: translate(-50%, -50%) scale(var(--s, 1)); } 50% { transform: translate(-50%, calc(-50% - 4px)) scale(var(--s, 1)); } }
-@keyframes bubbleDot { 0%, 60%, 100% { opacity: .35; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-3px); } }
-@keyframes bubblePop { 0%, 6% { opacity: 0; transform: scale(.5); } 10% { opacity: 1; transform: scale(1); } 38% { opacity: 1; transform: scale(1); } 46%, 100% { opacity: 0; transform: scale(.7); } }
-@keyframes scPeople { 0%, 8% { opacity: 0; } 16% { opacity: 1; } 52% { opacity: 1; } 62%, 100% { opacity: 0; } }
+.sc-book { position: absolute; left: 50%; top: 50%; width: 122px; aspect-ratio: 3/4; transform: translate(-50%, -50%); background: #f4efe4; border-radius: 4px; box-shadow: 0 12px 30px rgba(0,0,0,.5); z-index: 3; perspective: 700px; animation: scBook var(--sdur) cubic-bezier(.5,0,.2,1) infinite; }
+.sc-cover-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 4px; transform-origin: left center; backface-visibility: hidden; animation: scOpen var(--sdur) cubic-bezier(.6,0,.2,1) infinite; }
+.sc-dive { position: absolute; left: 50%; top: 50%; width: 122px; aspect-ratio: 3/4; background: #f4efe4; border-radius: 4px; transform: translate(-50%, -50%) scale(.2); opacity: 0; z-index: 4; animation: scDive var(--sdur) cubic-bezier(.6,0,.25,1) infinite; }
+.sc-logo { position: absolute; inset: 0; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 16px; opacity: 0; z-index: 6; animation: scLogo var(--sdur) ease-in-out infinite; }
+.sc-logo .brand-mark.big { width: 74px; height: 74px; flex-shrink: 0; }
+.sc-logo-txt { display: flex; flex-direction: column; align-items: flex-start; }
+.sc-title { display: flex; align-items: center; font-family: var(--serif); font-weight: 900; font-size: clamp(1.7rem, 3.4vw, 2.4rem); color: #f7f2e8; line-height: 1; letter-spacing: -.01em; }
+.sc-title-in { display: inline-block; overflow: hidden; white-space: nowrap; max-width: 0; vertical-align: bottom; animation: typeTitle var(--sdur) steps(7) infinite; }
+.sc-caret { display: inline-block; width: 3px; height: 1.05em; background: var(--vermelho); margin-left: 3px; animation: caretBlink .7s steps(1) infinite; }
+.sc-tag { font-family: var(--serif); font-weight: 600; font-style: italic; font-size: clamp(.85rem, 1.7vw, 1.1rem); color: rgba(247,242,232,.72); margin-top: 4px; opacity: 0; animation: tagIn var(--sdur) ease infinite; }
+@keyframes personBob { 0%,100% { transform: translate(-50%,-50%) scale(var(--s,1)); } 50% { transform: translate(-50%,calc(-50% - 4px)) scale(var(--s,1)); } }
+@keyframes bubbleDot { 0%,60%,100% { opacity:.35; transform:translateY(0); } 30% { opacity:1; transform:translateY(-3px); } }
+@keyframes bubblePop { 0%,6% { opacity:0; transform:scale(.5); } 10% { opacity:1; transform:scale(1); } 36% { opacity:1; transform:scale(1); } 44%,100% { opacity:0; transform:scale(.7); } }
+@keyframes scPeople { 0%,8% { opacity:0; } 16% { opacity:1; } 50% { opacity:1; } 60%,100% { opacity:0; } }
 @keyframes scBook {
   0% { transform: translate(-50%, -260%) scale(1); opacity: 0; }
   8% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-  54% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-  67% { transform: translate(-50%, -50%) scale(3.2); opacity: 1; }
-  71% { transform: translate(-50%, -50%) scale(3.7); opacity: 0; }
-  100% { transform: translate(-50%, -50%) scale(3.7); opacity: 0; }
+  52% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  60% { transform: translate(-50%, -50%) scale(1.08); opacity: 1; }
+  70% { transform: translate(-50%, -50%) scale(1.2); opacity: 0; }
+  100% { transform: translate(-50%, -50%) scale(1.2); opacity: 0; }
 }
-@keyframes scFlash { 0%, 66% { opacity: 0; } 69% { opacity: .9; } 74% { opacity: 0; } 100% { opacity: 0; } }
-@keyframes scLogo { 0%, 68% { opacity: 0; transform: scale(.86); } 74% { opacity: 1; transform: scale(1); } 93% { opacity: 1; transform: scale(1); } 99%, 100% { opacity: 0; transform: scale(.97); } }
+@keyframes scOpen { 0%,52% { transform: rotateY(0); } 64% { transform: rotateY(-152deg); } 100% { transform: rotateY(-152deg); } }
+@keyframes scDive {
+  0%,56% { transform: translate(-50%,-50%) scale(.2); opacity: 0; }
+  60% { transform: translate(-50%,-50%) scale(1); opacity: 1; }
+  71% { transform: translate(-50%,-50%) scale(9); opacity: 1; }
+  75% { transform: translate(-50%,-50%) scale(9); opacity: 1; }
+  80%,100% { transform: translate(-50%,-50%) scale(9); opacity: 0; }
+}
+@keyframes scLogo { 0%,74% { opacity: 0; } 78% { opacity: 1; } 94% { opacity: 1; } 99%,100% { opacity: 0; } }
+@keyframes typeTitle { 0%,78% { max-width: 0; } 88% { max-width: 260px; } 94% { max-width: 260px; } 100% { max-width: 0; } }
+@keyframes caretBlink { 0%,50% { opacity: 1; } 51%,100% { opacity: 0; } }
+@keyframes tagIn { 0%,88% { opacity: 0; transform: translateY(6px); } 92%,96% { opacity: 1; transform: none; } 99%,100% { opacity: 0; } }
 
-/* ---------- Esteiras de capas (marquee) ---------- */
+/* ---------- Esteiras de capas (grande e enxuto) ---------- */
 .belts { border-top: 1.5px solid var(--ink); border-bottom: 1.5px solid var(--ink); background: var(--paper-2); overflow: hidden; }
-.belt { overflow: hidden; padding: 14px 0; }
+.belt { overflow: hidden; padding: 16px 0; }
 .belt-2 { border-top: 1.5px solid var(--ink); }
-.belt-track { display: flex; gap: 16px; width: max-content; padding-left: 16px; will-change: transform; }
-.belt-1 .belt-track { animation: beltLeft 48s linear infinite; }
-.belt-2 .belt-track { animation: beltRight 48s linear infinite; }
+.belt-track { display: flex; align-items: center; gap: 18px; width: max-content; padding-left: 18px; will-change: transform; }
+.belt-1 .belt-track { animation: beltLeft 55s linear infinite; }
+.belt-2 .belt-track { animation: beltRight 70s linear infinite; }
 .belts:hover .belt-track { animation-play-state: paused; }
-.belt-cover { width: 88px; flex-shrink: 0; aspect-ratio: 3/4; border: 1.5px solid var(--ink); border-radius: 2px; overflow: hidden; background: var(--paper); box-shadow: 3px 3px 0 var(--ink); }
+.belt-cover { flex-shrink: 0; border: 1.5px solid var(--ink); border-radius: 3px; overflow: hidden; background: var(--paper); box-shadow: 4px 4px 0 var(--ink); }
+.belt-1 .belt-cover { width: 151px; height: 225px; }
+.belt-2 .belt-cover { width: 200px; height: 300px; }
 .belt-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
 @keyframes beltLeft { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 @keyframes beltRight { from { transform: translateX(-50%); } to { transform: translateX(0); } }

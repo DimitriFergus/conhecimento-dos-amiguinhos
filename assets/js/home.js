@@ -228,15 +228,37 @@
   filterBtns.forEach((btn) => btn.addEventListener("click", () => setFilter(btn.dataset.filter)));
   renderBooks("all");
 
-  /* ---------- Esteiras de capas (duas direções) ---------- */
+  /* ---------- Esteiras de capas (livros em alta, grande e enxuto) ---------- */
   (function renderBelts() {
     const b1 = $("#belt1"), b2 = $("#belt2");
     if (!b1 || !b2) return;
-    const cover = (bk) => `<span class="belt-cover"><img src="${coverURL(bk.isbn)}" alt="" loading="lazy" onerror="this.remove()" /></span>`;
-    const set1 = BOOKS.map(cover).join("");
-    const set2 = BOOKS.slice().reverse().map(cover).join("");
-    b1.innerHTML = set1 + set1;   // duplicado p/ loop contínuo
-    b2.innerHTML = set2 + set2;
+    // capas de livros que chamam atenção / estão em alta
+    const BELT1 = ["9781649374042", "9781649374172", "9780062060624", "9781501110368", "9780593321201", "9780063021426", "9780525559474", "9780316556347", "9780593135204", "9780804172707", "9788535914849", "9780140449136"];
+    const BELT2 = ["9780441013593", "9780062316097", "9788563560247", "9780553213690", "9780441569595", "9780060883287", "9780195106817", "9780140441185", "9780735211292", "9780345472328", "9780140449334", "9780553293357"];
+    const cover = (isbn) => `<span class="belt-cover"><img src="${coverURL(isbn)}" alt="" loading="lazy" onerror="this.remove()" /></span>`;
+    const s1 = BELT1.map(cover).join("");
+    const s2 = BELT2.map(cover).join("");
+    b1.innerHTML = s1 + s1;   // duplicado p/ loop contínuo
+    b2.innerHTML = s2 + s2;
+  })();
+
+  /* ---------- Cena do hero: alterna as 3 capas a cada volta ---------- */
+  (function centralCovers() {
+    const img = document.getElementById("scCover");
+    const book = document.querySelector(".sc-book");
+    if (!img || !book) return;
+    const covers = [
+      "https://covers.openlibrary.org/b/isbn/9788535914849-L.jpg", // 1984 (olho)
+      "https://covers.openlibrary.org/b/isbn/9788563560247-L.jpg", // O Jogador (espada)
+      "https://covers.openlibrary.org/b/isbn/9780553213690-L.jpg", // A Metamorfose
+    ];
+    covers.forEach((u) => { const p = new Image(); p.src = u; }); // pré-carrega
+    let i = 0;
+    book.addEventListener("animationiteration", () => {
+      i = (i + 1) % covers.length;
+      img.style.opacity = "";
+      img.src = covers[i];
+    });
   })();
 
   /* ============================================================
