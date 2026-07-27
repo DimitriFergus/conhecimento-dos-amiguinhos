@@ -35,6 +35,27 @@
   const CAT_CLASS = window.CDA_CAT_CLASS || {};
   const initials = (t) => t.split(" ").filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
 
+  /* ---------- Registro de metadados de livros ----------
+     Além do catálogo curado (catalog.js, com ISBN e sinopse), guardamos
+     em localStorage os livros vindos da Open Library que o usuário
+     encontrar/adicionar. Assim a estante, o leitor e as recomendações
+     conseguem mostrar capa + autor mesmo de livros que não são do acervo. */
+  const BOOKMETA_KEY = "cda_bookmeta";
+  function readBookMeta() { try { return JSON.parse(LS.getItem(BOOKMETA_KEY)) || {}; } catch (e) { return {}; } }
+  function cacheBookMeta(title, m) {
+    if (!title || CATALOG[title]) return; // acervo curado tem prioridade
+    const all = readBookMeta();
+    all[title] = Object.assign({}, all[title], m);
+    try { LS.setItem(BOOKMETA_KEY, JSON.stringify(all)); } catch (e) {}
+  }
+  /* Lookup unificado: catálogo curado > cache da Open Library > genérico. */
+  function bookMeta(title) {
+    if (CATALOG[title]) return Object.assign({ t: title }, CATALOG[title]);
+    const m = readBookMeta()[title];
+    if (m) return { t: title, a: m.a || "Autor desconhecido", c: m.c || "literatura", cat: m.cat || "Open Library", isbn: m.isbn || "", cover: m.cover || "", ol: true };
+    return { t: title, a: "Autor", c: "literatura", cat: "Literatura", isbn: "" };
+  }
+
   /* ============================================================
      SESSÃO — vem do banco de dados (conta logada)
      ============================================================ */
@@ -58,7 +79,7 @@
   /* Estante = livros na filiação, com o progresso vindo do histórico */
   function loadEstante() {
     const shelf = readShelf() || [];
-    return shelf.map((t) => ({ t, progress: Math.round(getHist(t).progress || 0), ...(CATALOG[t] || { a: "Autor", c: "literatura", cat: "Literatura", isbn: "" }) }));
+    return shelf.map((t) => ({ progress: Math.round(getHist(t).progress || 0), ...bookMeta(t) }));
   }
   let estante = loadEstante();
 
@@ -263,7 +284,8 @@
      ============================================================ */
   function coverInner(b, small) {
     const cls = CAT_CLASS[b.c] || "cov-literatura";
-    const img = b.isbn ? `<img src="${coverURL(b.isbn)}" alt="Capa de ${b.t}" loading="lazy" onerror="this.remove()">` : "";
+    const src = b.isbn ? coverURL(b.isbn) : (b.cover || "");
+    const img = src ? `<img src="${src}" alt="Capa de ${b.t}" loading="lazy" onerror="this.remove()">` : "";
     if (small) {
       return `<div class="read-cover ${cls}">${img}<span class="rc-fallback">${b.t[0]}</span></div>`;
     }
@@ -324,48 +346,63 @@
   }
 
   /* ============================================================
-     RENDER: Biblioteca de Alexandria (acervo completo)
+     RENDER: Biblioteca de Alexandria
+     Duas fontes: "club" (acervo curado, catalog.js) e "ol"
+     (Open Library — busca ao vivo de livros em pt-BR).
      ============================================================ */
   const CATALOG_LIST = Object.keys(CATALOG).map((t) => ({ t, ...CATALOG[t] }));
+  let alexSource = "club";
   let alexFilter = "all";
   let alexSearch = "";
   const normTxt = (s) => String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 
+  // Estado da Open Library (acumula resultados para paginar).
+  let olBooks = [];
+  let olPage = 1, olTotal = 0, olLoading = false, olToken = 0, olTimer = null;
+  const OL_PER = 24;
+  // Categoria -> termo de busca em português (melhores resultados em pt-BR).
+  const OL_TERM = {
+    all: "literatura brasileira", ficcao: "ficção científica", autoajuda: "autoajuda",
+    filosofia: "filosofia", historia: "história do brasil", literatura: "romance",
+    matematica: "matemática",
+  };
+
   function inEstante(t) { return (readShelf() || []).includes(t); }
 
-  function renderAlexandria() {
-    const grid = $("#alexGrid");
-    const q = normTxt(alexSearch);
-    const list = CATALOG_LIST.filter((b) => {
-      if (alexFilter !== "all" && b.c !== alexFilter) return false;
-      if (q && !(normTxt(b.t).includes(q) || normTxt(b.a).includes(q))) return false;
-      return true;
-    });
-    const empty = $("#alexEmpty"); if (empty) empty.hidden = list.length !== 0;
-    grid.innerHTML = list.map((b, i) => {
-      const added = inEstante(b.t);
-      return `
-      <article class="book-card card-enter" data-title="${b.t}" style="animation-delay:${Math.min(i * 35, 350)}ms">
+  // Monta o HTML de UM card. Serve para o acervo e para a Open Library.
+  function alexCardHTML(b, i) {
+    const added = inEstante(b.t);
+    const t = escapeHtml(b.t), a = escapeHtml(b.a || "");
+    const catLabel = escapeHtml(b.cat || CAT_NAME[b.c] || "Livro");
+    const src = b.isbn ? coverURL(b.isbn) : (b.cover || "");
+    const img = src ? `<img class="cover-img" src="${src}" alt="Capa de ${t}" loading="lazy" onerror="this.remove()" />` : "";
+    const tagOrYear = b.ol
+      ? `<span class="book-year">${b.year ? b.year : "Open Library"}</span>`
+      : `<button class="book-tag" data-tag="${b.c}">#${catLabel}</button>`;
+    return `
+      <article class="book-card card-enter" data-title="${t}" style="animation-delay:${Math.min(i * 30, 300)}ms">
         <div class="book-cover cov-${b.c}">
-          <img class="cover-img" src="${coverURL(b.isbn)}" alt="Capa de ${b.t}" loading="lazy" onerror="this.remove()" />
-          <span class="cover-cat">${b.cat}</span>
-          <span class="cover-title">${b.t}</span>
-          <span class="cover-author">${b.a}</span>
+          ${img}
+          <span class="cover-cat">${catLabel}</span>
+          <span class="cover-title">${t}</span>
+          <span class="cover-author">${a}</span>
         </div>
         <div class="book-info">
           <div class="book-meta">
-            <strong class="book-title">${b.t}</strong>
-            <small class="book-author">${b.a}</small>
+            <strong class="book-title">${t}</strong>
+            <small class="book-author">${a}</small>
           </div>
-          <button class="book-tag" data-tag="${b.c}">#${b.cat}</button>
-          <button class="alex-add ${added ? "is-added" : ""}" data-title="${b.t}">
+          ${tagOrYear}
+          <button class="alex-add ${added ? "is-added" : ""}" data-title="${t}">
             <span class="lbl-in">${added ? "✓ Na estante" : "+ Adicionar à estante"}</span>
             <span class="lbl-out">✕ Tirar da estante</span>
           </button>
         </div>
       </article>`;
-    }).join("");
+  }
 
+  // Liga os eventos de clique dos cards já injetados no grid.
+  function wireAlexCards(grid) {
     $$(".book-card", grid).forEach((card) => card.addEventListener("click", () => openBookInfo(card.dataset.title)));
     $$(".alex-add", grid).forEach((btn) => btn.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -377,14 +414,114 @@
     }));
   }
 
+  function setAlexStatus(msg) {
+    const el = $("#alexStatus"); if (!el) return;
+    el.hidden = !msg; el.textContent = msg || "";
+  }
+
+  function renderAlexandria() {
+    if (alexSource === "ol") { renderOL(); return; }
+    // ---- Acervo do clube (curado, offline) ----
+    setAlexStatus("");
+    const more = $("#alexMore"); if (more) more.hidden = true;
+    const grid = $("#alexGrid");
+    const q = normTxt(alexSearch);
+    const list = CATALOG_LIST.filter((b) => {
+      if (alexFilter !== "all" && b.c !== alexFilter) return false;
+      if (q && !(normTxt(b.t).includes(q) || normTxt(b.a).includes(q))) return false;
+      return true;
+    });
+    const empty = $("#alexEmpty"); if (empty) empty.hidden = list.length !== 0;
+    grid.innerHTML = list.map((b, i) => alexCardHTML(b, i)).join("");
+    wireAlexCards(grid);
+  }
+
+  /* ---- Open Library: renderiza o que já foi buscado ---- */
+  function renderOL() {
+    const grid = $("#alexGrid");
+    const empty = $("#alexEmpty");
+    const more = $("#alexMore");
+    if (empty) empty.hidden = olBooks.length !== 0 || olLoading;
+    grid.innerHTML = olBooks.map((b, i) => alexCardHTML(b, i)).join("");
+    wireAlexCards(grid);
+    if (more) {
+      const hasMore = olBooks.length < olTotal;
+      more.hidden = !hasMore || olLoading;
+      more.textContent = olLoading ? "Carregando…" : "Carregar mais livros";
+      more.disabled = olLoading;
+    }
+    if (olLoading && !olBooks.length) setAlexStatus("Buscando livros na Open Library…");
+    else if (olTotal) setAlexStatus(`${olTotal.toLocaleString("pt-BR")} livros encontrados · mostrando ${olBooks.length}`);
+    else setAlexStatus("");
+  }
+
+  /* ---- Open Library: dispara a busca (nova ou próxima página) ---- */
+  function fetchOL(reset) {
+    if (!window.OL) { setAlexStatus("Não foi possível carregar a Open Library."); return; }
+    if (reset) { olBooks = []; olPage = 1; olTotal = 0; }
+    const query = alexSearch.trim() ? alexSearch.trim() : (OL_TERM[alexFilter] || OL_TERM.all);
+    const cat = alexFilter === "all" ? "literatura" : alexFilter;
+    const token = ++olToken;
+    olLoading = true;
+    renderOL();
+    window.OL.search(query, { limit: OL_PER, page: olPage, sort: alexSearch.trim() ? undefined : "readinglog" })
+      .then((res) => {
+        if (token !== olToken) return; // resposta velha: ignora
+        olTotal = res.total;
+        res.books.forEach((b) => {
+          b.c = cat;
+          b.cat = CAT_NAME[cat] || "Open Library";
+          b.ol = true;
+          // guarda metadados p/ estante/leitor mostrarem capa + autor depois
+          cacheBookMeta(b.t, { a: b.a, c: b.c, cat: "Open Library", cover: b.cover, year: b.year });
+          olBooks.push(b);
+        });
+        olLoading = false;
+        renderOL();
+      })
+      .catch(() => {
+        if (token !== olToken) return;
+        olLoading = false;
+        setAlexStatus("Erro ao buscar na Open Library. Verifique a conexão e tente de novo.");
+        const more = $("#alexMore"); if (more) more.hidden = true;
+      });
+  }
+
+  // Busca com atraso (debounce) enquanto o usuário digita.
+  function scheduleOL() {
+    if (olTimer) clearTimeout(olTimer);
+    olTimer = setTimeout(() => fetchOL(true), 350);
+  }
+
   function setAlexFilter(f) {
     alexFilter = f;
     $$("#alexFilters .filter").forEach((btn) => btn.classList.toggle("is-active", btn.dataset.filter === f));
-    renderAlexandria();
+    if (alexSource === "ol") fetchOL(true);
+    else renderAlexandria();
   }
+
+  function setAlexSource(src) {
+    if (src === alexSource) return;
+    alexSource = src;
+    $$(".alex-src").forEach((btn) => {
+      const on = btn.dataset.src === src;
+      btn.classList.toggle("is-active", on);
+      btn.setAttribute("aria-selected", on ? "true" : "false");
+    });
+    if (src === "ol") fetchOL(true);
+    else renderAlexandria();
+  }
+
   $$("#alexFilters .filter").forEach((btn) => btn.addEventListener("click", () => setAlexFilter(btn.dataset.filter)));
+  $$(".alex-src").forEach((btn) => btn.addEventListener("click", () => setAlexSource(btn.dataset.src)));
+  const alexMoreBtn = $("#alexMore");
+  if (alexMoreBtn) alexMoreBtn.addEventListener("click", () => { olPage += 1; fetchOL(false); });
   const alexSearchInput = $("#alexSearch");
-  if (alexSearchInput) alexSearchInput.addEventListener("input", () => { alexSearch = alexSearchInput.value; renderAlexandria(); });
+  if (alexSearchInput) alexSearchInput.addEventListener("input", () => {
+    alexSearch = alexSearchInput.value;
+    if (alexSource === "ol") scheduleOL();
+    else renderAlexandria();
+  });
 
   function refreshAll() {
     estante = loadEstante();
@@ -418,8 +555,12 @@
   function fmtYear(y) { return y < 0 ? `${Math.abs(y)} a.C.` : `${y}`; }
 
   function openBookInfo(title) {
-    const cat = CATALOG[title] || { a: "Autor", c: "literatura", cat: "Literatura", isbn: "" };
-    const info = DATA[title] || { syn: "Sinopse em breve.", why: "", themes: [], pages: null, year: null, dif: "" };
+    const cat = bookMeta(title);
+    const meta = readBookMeta()[title] || {};
+    const info = DATA[title] || {
+      syn: cat.ol ? "Livro encontrado na Open Library. Adicione à sua estante para acompanhar a leitura." : "Sinopse em breve.",
+      why: "", themes: [], pages: null, year: meta.year || null, dif: ""
+    };
     const h = getHist(title);
     const added = inEstante(title);
     const readable = !!(window.CDA_PDF && window.CDA_PDF[title]);
@@ -428,7 +569,7 @@
     $("#bmTitle").textContent = title;
     $("#bmAuthor").textContent = cat.a;
     $("#bmCover").className = "bookmodal-cover cov-" + cat.c;
-    $("#bmCover").innerHTML = coverInner({ t: title, a: cat.a, c: cat.c, cat: cat.cat, isbn: cat.isbn }, false);
+    $("#bmCover").innerHTML = coverInner({ t: title, a: cat.a, c: cat.c, cat: cat.cat, isbn: cat.isbn, cover: cat.cover }, false);
 
     const chips = [];
     if (info.year) chips.push(`<span class="bm-chip">📅 <b>${fmtYear(info.year)}</b></span>`);
@@ -544,8 +685,9 @@
      RENDER: ranking
      ============================================================ */
   function popCover(title) {
-    const b = CATALOG[title] || { c: "literatura", isbn: "" };
-    const img = b.isbn ? `<img src="${coverURL(b.isbn)}" alt="" loading="lazy" onerror="this.remove()">` : "";
+    const b = bookMeta(title);
+    const src = b.isbn ? coverURL(b.isbn) : (b.cover || "");
+    const img = src ? `<img src="${src}" alt="" loading="lazy" onerror="this.remove()">` : "";
     return `<span class="rp-book cov-${b.c}">${img}${escapeHtml((title || "?")[0])}</span>`;
   }
   function renderBoard() {

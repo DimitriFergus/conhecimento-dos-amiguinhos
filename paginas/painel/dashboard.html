@@ -155,7 +155,12 @@
       <div class="view-head reveal">
         <span class="section-idx">Biblioteca de Alexandria</span>
         <h1 class="view-title">Todo o acervo, num lugar só</h1>
-        <p class="view-sub">Aqui estão todos os livros do clube, categorizados. Clique em <strong>adicionar</strong> e ele vai direto para a sua estante.</p>
+        <p class="view-sub">O acervo do clube e milhões de livros da <strong>Open Library</strong>, em português. Clique em <strong>adicionar</strong> e ele vai direto para a sua estante.</p>
+      </div>
+
+      <div class="alex-source" role="tablist" aria-label="Fonte dos livros">
+        <button class="alex-src is-active" data-src="club" role="tab" aria-selected="true">📚 Acervo do clube</button>
+        <button class="alex-src" data-src="ol" role="tab" aria-selected="false">🌐 Open Library</button>
       </div>
 
       <div class="alex-search">
@@ -174,7 +179,11 @@
       </div>
 
       <div class="alex-grid" id="alexGrid" aria-live="polite"><!-- injetado --></div>
+      <p class="alex-status" id="alexStatus" hidden aria-live="polite"></p>
       <p class="alex-empty" id="alexEmpty" hidden>Nenhum livro encontrado para essa busca.</p>
+      <div class="alex-more-wrap">
+        <button class="alex-more" id="alexMore" hidden>Carregar mais livros</button>
+      </div>
     </section>
 
     <!-- ========== VIEW: DESAFIOS ========== -->
@@ -347,6 +356,7 @@
 <script src="../../assets/js/catalog.js"></script>
 <script src="../../assets/js/achievements.js"></script>
 <script src="../../assets/js/booksdata.js"></script>
+<script src="../../assets/js/openlibrary.js"></script>
 <script>
   /* Só entra no painel quem está logado E com e-mail confirmado.
      O app (dashboard.js) só carrega depois que os dados estão prontos. */

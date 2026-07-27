@@ -343,6 +343,31 @@
 .alex-search input:focus { outline: none; border-color: var(--vermelho); box-shadow: 0 0 0 3px rgba(232,69,42,.16); }
 .alex-empty { font-family: var(--serif); font-style: italic; font-size: 1.2rem; color: var(--ink-soft); padding: 24px 0; }
 
+/* Alternador de fonte: Acervo do clube x Open Library */
+.alex-source { display: inline-flex; gap: 4px; padding: 4px; margin-bottom: 18px; border: 1.5px solid var(--ink); border-radius: 40px; }
+.alex-src {
+  font-size: .82rem; font-weight: 700; letter-spacing: .01em; padding: .55em 1.2em; border-radius: 40px;
+  color: var(--ink-soft); transition: background .25s, color .25s;
+}
+.alex-src:hover { color: var(--ink); }
+.alex-src.is-active { background: var(--ink); color: var(--paper); }
+
+/* Status da busca (contador de resultados) */
+.alex-status { font-size: .78rem; letter-spacing: .04em; text-transform: uppercase; font-weight: 700; color: var(--ink-soft); padding: 4px 0 18px; }
+
+/* Botão "carregar mais" */
+.alex-more-wrap { display: flex; justify-content: center; margin: 8px 0 12px; }
+.alex-more {
+  font-family: var(--sans); font-size: .9rem; font-weight: 700; padding: .8em 2em;
+  border: 1.5px solid var(--ink); border-radius: 40px; background: var(--paper); color: var(--ink);
+  transition: background .25s, color .25s, transform .25s;
+}
+.alex-more:hover { background: var(--ink); color: var(--paper); transform: translateY(-2px); }
+.alex-more:disabled { opacity: .55; cursor: default; transform: none; }
+
+/* Ano/etiqueta de livros vindos da Open Library */
+.book-year { font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-soft); align-self: center; }
+
 /* ============================================================
    PERFIL — cartão social, favoritos, conquistas, frases
    ============================================================ */
