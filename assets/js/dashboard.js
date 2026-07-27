@@ -84,7 +84,12 @@
   let estante = loadEstante();
 
   const slug = (t) => encodeURIComponent(t);
-  const readerLink = (t) => `../leitor/reader.html?book=${slug(t)}`;
+  const readerLink = (t) => {
+    let u = `../leitor/reader.html?book=${slug(t)}`;
+    const m = bookMeta(t);
+    if (m && m.ia) u += `&ia=${encodeURIComponent(m.ia)}`; // livro da Open Library: lê via Internet Archive
+    return u;
+  };
   function openReader(t) { window.location.href = readerLink(t); }
 
   /* ============================================================
@@ -346,12 +351,14 @@
   }
 
   /* ============================================================
-     RENDER: Biblioteca de Alexandria
-     Duas fontes: "club" (acervo curado, catalog.js) e "ol"
-     (Open Library — busca ao vivo de livros em pt-BR).
+     RENDER: Biblioteca de Alexandria — UM acervo só.
+     Junta o catálogo curado do clube (catalog.js) + os livros
+     famosos e LEGÍVEIS da Open Library (domínio público, cada um
+     com item no Internet Archive). Sem divisões: tudo num grid.
+     A capa de cada livro da OL é a imagem do PRÓPRIO item lido,
+     então a capa sempre bate com o que abre no leitor.
      ============================================================ */
   const CATALOG_LIST = Object.keys(CATALOG).map((t) => ({ t, ...CATALOG[t] }));
-  let alexSource = "club";
   let alexFilter = "all";
   let alexSearch = "";
   const normTxt = (s) => String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
@@ -360,16 +367,16 @@
   let olBooks = [];
   let olPage = 1, olTotal = 0, olLoading = false, olToken = 0, olTimer = null;
   const OL_PER = 24;
-  // Categoria -> termo de busca em português (melhores resultados em pt-BR).
+  // Categoria -> termo de busca (só livros públicos e legíveis entram).
   const OL_TERM = {
-    all: "literatura brasileira", ficcao: "ficção científica", autoajuda: "autoajuda",
-    filosofia: "filosofia", historia: "história do brasil", literatura: "romance",
+    all: "", ficcao: "ficção científica", autoajuda: "autoajuda",
+    filosofia: "filosofia", historia: "história", literatura: "romance clássico",
     matematica: "matemática",
   };
 
   function inEstante(t) { return (readShelf() || []).includes(t); }
 
-  // Monta o HTML de UM card. Serve para o acervo e para a Open Library.
+  // Monta o HTML de UM card. Serve para o acervo curado e para a Open Library.
   function alexCardHTML(b, i) {
     const added = inEstante(b.t);
     const t = escapeHtml(b.t), a = escapeHtml(b.a || "");
@@ -377,10 +384,10 @@
     const src = b.isbn ? coverURL(b.isbn) : (b.cover || "");
     const img = src ? `<img class="cover-img" src="${src}" alt="Capa de ${t}" loading="lazy" onerror="this.remove()" />` : "";
     const tagOrYear = b.ol
-      ? `<span class="book-year">${b.year ? b.year : "Open Library"}</span>`
+      ? `<span class="book-year">${b.year ? b.year : "clássico"}</span>`
       : `<button class="book-tag" data-tag="${b.c}">#${catLabel}</button>`;
     return `
-      <article class="book-card card-enter" data-title="${t}" style="animation-delay:${Math.min(i * 30, 300)}ms">
+      <article class="book-card card-enter" data-title="${t}" style="animation-delay:${Math.min(i * 22, 280)}ms">
         <div class="book-cover cov-${b.c}">
           ${img}
           <span class="cover-cat">${catLabel}</span>
@@ -419,76 +426,80 @@
     el.hidden = !msg; el.textContent = msg || "";
   }
 
-  function renderAlexandria() {
-    if (alexSource === "ol") { renderOL(); return; }
-    // ---- Acervo do clube (curado, offline) ----
-    setAlexStatus("");
-    const more = $("#alexMore"); if (more) more.hidden = true;
-    const grid = $("#alexGrid");
+  // Livros curados que casam com o filtro/busca atuais.
+  function curatedMatches() {
     const q = normTxt(alexSearch);
-    const list = CATALOG_LIST.filter((b) => {
+    return CATALOG_LIST.filter((b) => {
       if (alexFilter !== "all" && b.c !== alexFilter) return false;
       if (q && !(normTxt(b.t).includes(q) || normTxt(b.a).includes(q))) return false;
       return true;
     });
-    const empty = $("#alexEmpty"); if (empty) empty.hidden = list.length !== 0;
-    grid.innerHTML = list.map((b, i) => alexCardHTML(b, i)).join("");
-    wireAlexCards(grid);
   }
 
-  /* ---- Open Library: renderiza o que já foi buscado ---- */
-  function renderOL() {
+  // Render puro do acervo unificado (curado + OL já buscados). NÃO busca.
+  function renderAlexandria() {
     const grid = $("#alexGrid");
-    const empty = $("#alexEmpty");
-    const more = $("#alexMore");
-    if (empty) empty.hidden = olBooks.length !== 0 || olLoading;
-    grid.innerHTML = olBooks.map((b, i) => alexCardHTML(b, i)).join("");
+    if (!grid) return;
+    const curated = curatedMatches();
+    const seen = new Set(curated.map((b) => normTxt(b.t)));
+    const olShown = olBooks.filter((b) => !seen.has(normTxt(b.t))); // evita duplicar
+    const all = curated.concat(olShown);
+
+    const empty = $("#alexEmpty"); if (empty) empty.hidden = all.length !== 0 || olLoading;
+    grid.innerHTML = all.map((b, i) => alexCardHTML(b, i)).join("");
     wireAlexCards(grid);
+
+    const more = $("#alexMore");
     if (more) {
       const hasMore = olBooks.length < olTotal;
       more.hidden = !hasMore || olLoading;
       more.textContent = olLoading ? "Carregando…" : "Carregar mais livros";
       more.disabled = olLoading;
     }
-    if (olLoading && !olBooks.length) setAlexStatus("Buscando livros na Open Library…");
-    else if (olTotal) setAlexStatus(`${olTotal.toLocaleString("pt-BR")} livros encontrados · mostrando ${olBooks.length}`);
+    if (olLoading) setAlexStatus(all.length ? `${all.length} livros · carregando mais…` : "Carregando o acervo…");
+    else if (all.length) setAlexStatus(`${all.length} livros no acervo`);
     else setAlexStatus("");
   }
 
-  /* ---- Open Library: dispara a busca (nova ou próxima página) ---- */
+  /* ---- Open Library: busca famosos + legíveis (nova ou próxima página) ---- */
   function fetchOL(reset) {
-    if (!window.OL) { setAlexStatus("Não foi possível carregar a Open Library."); return; }
+    if (!window.OL) { renderAlexandria(); return; }
     if (reset) { olBooks = []; olPage = 1; olTotal = 0; }
-    const query = alexSearch.trim() ? alexSearch.trim() : (OL_TERM[alexFilter] || OL_TERM.all);
+    // Só livros públicos (leem de graça). Sem busca = os mais lidos.
+    const base = alexSearch.trim() ? alexSearch.trim() : (OL_TERM[alexFilter] || "");
+    const query = (base ? base + " " : "") + "ebook_access:public";
     const cat = alexFilter === "all" ? "literatura" : alexFilter;
     const token = ++olToken;
     olLoading = true;
-    renderOL();
+    renderAlexandria();
     window.OL.search(query, { limit: OL_PER, page: olPage, sort: alexSearch.trim() ? undefined : "readinglog" })
       .then((res) => {
         if (token !== olToken) return; // resposta velha: ignora
         olTotal = res.total;
         res.books.forEach((b) => {
+          if (!b.ia) return;                 // sem item = não dá pra ler: fora
+          if (CATALOG[b.t]) return;          // já é do acervo curado
           b.c = cat;
-          b.cat = CAT_NAME[cat] || "Open Library";
+          b.cat = CAT_NAME[cat] || "Clássico";
           b.ol = true;
-          // guarda metadados p/ estante/leitor mostrarem capa + autor depois
-          cacheBookMeta(b.t, { a: b.a, c: b.c, cat: "Open Library", cover: b.cover, year: b.year });
+          // guarda metadados p/ estante + LEITOR (ia) mostrarem/abrirem certo
+          cacheBookMeta(b.t, { a: b.a, c: b.c, cat: b.cat, cover: b.cover, year: b.year, ia: b.ia });
           olBooks.push(b);
         });
         olLoading = false;
-        renderOL();
+        renderAlexandria();
       })
       .catch(() => {
         if (token !== olToken) return;
         olLoading = false;
-        setAlexStatus("Erro ao buscar na Open Library. Verifique a conexão e tente de novo.");
-        const more = $("#alexMore"); if (more) more.hidden = true;
+        renderAlexandria();
+        if (!olBooks.length && !curatedMatches().length) setAlexStatus("Erro ao carregar livros. Verifique a conexão e tente de novo.");
       });
   }
 
   // Busca com atraso (debounce) enquanto o usuário digita.
   function scheduleOL() {
+    renderAlexandria();               // mostra os curados na hora
     if (olTimer) clearTimeout(olTimer);
     olTimer = setTimeout(() => fetchOL(true), 350);
   }
@@ -496,31 +507,16 @@
   function setAlexFilter(f) {
     alexFilter = f;
     $$("#alexFilters .filter").forEach((btn) => btn.classList.toggle("is-active", btn.dataset.filter === f));
-    if (alexSource === "ol") fetchOL(true);
-    else renderAlexandria();
-  }
-
-  function setAlexSource(src) {
-    if (src === alexSource) return;
-    alexSource = src;
-    $$(".alex-src").forEach((btn) => {
-      const on = btn.dataset.src === src;
-      btn.classList.toggle("is-active", on);
-      btn.setAttribute("aria-selected", on ? "true" : "false");
-    });
-    if (src === "ol") fetchOL(true);
-    else renderAlexandria();
+    fetchOL(true);
   }
 
   $$("#alexFilters .filter").forEach((btn) => btn.addEventListener("click", () => setAlexFilter(btn.dataset.filter)));
-  $$(".alex-src").forEach((btn) => btn.addEventListener("click", () => setAlexSource(btn.dataset.src)));
   const alexMoreBtn = $("#alexMore");
   if (alexMoreBtn) alexMoreBtn.addEventListener("click", () => { olPage += 1; fetchOL(false); });
   const alexSearchInput = $("#alexSearch");
   if (alexSearchInput) alexSearchInput.addEventListener("input", () => {
     alexSearch = alexSearchInput.value;
-    if (alexSource === "ol") scheduleOL();
-    else renderAlexandria();
+    scheduleOL();
   });
 
   function refreshAll() {
@@ -558,12 +554,12 @@
     const cat = bookMeta(title);
     const meta = readBookMeta()[title] || {};
     const info = DATA[title] || {
-      syn: cat.ol ? "Livro encontrado na Open Library. Adicione à sua estante para acompanhar a leitura." : "Sinopse em breve.",
+      syn: cat.ol ? "Clássico disponível para leitura gratuita, direto aqui no leitor do clube." : "Sinopse em breve.",
       why: "", themes: [], pages: null, year: meta.year || null, dif: ""
     };
     const h = getHist(title);
     const added = inEstante(title);
-    const readable = !!(window.CDA_PDF && window.CDA_PDF[title]);
+    const readable = !!(window.CDA_PDF && window.CDA_PDF[title]) || !!(cat && cat.ia);
 
     $("#bmCat").textContent = cat.cat || CAT_NAME[cat.c] || "";
     $("#bmTitle").textContent = title;
@@ -962,7 +958,7 @@
   renderProfile();
   renderReading();
   renderShelf();
-  renderAlexandria();
+  fetchOL(true);        // acervo unificado: curado + Open Library (famosos e legíveis)
   renderRecs();
   renderBoard();
   reobserveReveals();

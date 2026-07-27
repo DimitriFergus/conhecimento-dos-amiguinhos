@@ -41,6 +41,7 @@
   const params = new URLSearchParams(location.search);
   const bookTitle = (params.get("book") || "").trim();
   const srcParam = (params.get("src") || "").trim();
+  const iaParam = (params.get("ia") || "").trim(); // item do Internet Archive (livros da Open Library)
 
   /* ---------- elementos ---------- */
   const pagesEl = $("#rdPages");
@@ -241,7 +242,49 @@
   $("#emptyOpen").addEventListener("click", () => fileInput.click());
 
   /* ============================================================
-     INÍCIO — decide a fonte do PDF
+     LEITURA VIA INTERNET ARCHIVE (livros da Open Library)
+     Embute o leitor do próprio Archive (iframe). É o MESMO item
+     cuja capa aparece no acervo — então nunca há livro trocado.
+     ============================================================ */
+  function renderIA(ia) {
+    emptyEl.hidden = true;
+    pagesEl.innerHTML = "";
+    // o progresso por scroll não se aplica ao iframe do Archive
+    if (topPagesLbl) topPagesLbl.textContent = "leitura on-line";
+    if (pctEl) pctEl.style.display = "none";
+    if (fillEl && fillEl.parentElement) fillEl.parentElement.style.display = "none";
+    if (ptsWrap) ptsWrap.hidden = true;
+    if (downloadBtn) downloadBtn.hidden = true;
+
+    const wrap = document.createElement("div");
+    wrap.className = "rd-embed-wrap";
+    wrap.style.cssText = "padding:12px 0 40px;";
+
+    const frame = document.createElement("iframe");
+    frame.className = "rd-embed";
+    frame.src = "https://archive.org/embed/" + encodeURIComponent(ia);
+    frame.setAttribute("title", "Leitor: " + (bookTitle || ia));
+    frame.setAttribute("allowfullscreen", "");
+    frame.setAttribute("allow", "fullscreen");
+    frame.setAttribute("frameborder", "0");
+    frame.style.cssText = "width:100%; height:calc(100vh - 96px); min-height:70vh; border:0; display:block; background:#fff; border-radius:14px;";
+
+    const bar = document.createElement("div");
+    bar.style.cssText = "display:flex; justify-content:center; margin-top:14px;";
+    const a = document.createElement("a");
+    a.href = "https://archive.org/details/" + encodeURIComponent(ia);
+    a.target = "_blank"; a.rel = "noopener";
+    a.className = "btn btn-line";
+    a.textContent = "↗ Abrir em tela cheia no Internet Archive";
+    bar.appendChild(a);
+
+    wrap.appendChild(frame);
+    wrap.appendChild(bar);
+    pagesEl.appendChild(wrap);
+  }
+
+  /* ============================================================
+     INÍCIO — decide a fonte do livro
      ============================================================ */
   function resolveSource() {
     // 1) PDF embutido (base64) — funciona offline / file://
@@ -268,13 +311,19 @@
   window.addEventListener("pagehide", persistOnLeave);
   document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") persistOnLeave(); });
 
-  if (!pdfjsLib) {
+  const localSource = pdfjsLib ? resolveSource() : null;
+  if (localSource) {
+    // 1) PDF do clube (com medição de progresso e pontos)
+    renderPDF(localSource);
+  } else if (iaParam) {
+    // 2) livro da Open Library — lê via Internet Archive (mesmo item da capa)
+    renderIA(iaParam);
+  } else if (!pdfjsLib) {
     emptyEl.hidden = false;
     showToast("Leitor indisponível (falha ao carregar o motor de PDF).");
   } else {
-    const source = resolveSource();
-    if (source) renderPDF(source);
-    else emptyEl.hidden = false;
+    // 3) sem fonte: estado vazio (abrir PDF do PC)
+    emptyEl.hidden = false;
   }
 
 })();
