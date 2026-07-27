@@ -41,7 +41,8 @@
   const params = new URLSearchParams(location.search);
   const bookTitle = (params.get("book") || "").trim();
   const srcParam = (params.get("src") || "").trim();
-  const iaParam = (params.get("ia") || "").trim(); // item do Internet Archive (livros da Open Library)
+  const iaParam = (params.get("ia") || "").trim(); // item do Internet Archive (Open Library)
+  const gbParam = (params.get("gb") || "").trim(); // id do Project Gutenberg (livros em português)
 
   /* ---------- elementos ---------- */
   const pagesEl = $("#rdPages");
@@ -242,14 +243,15 @@
   $("#emptyOpen").addEventListener("click", () => fileInput.click());
 
   /* ============================================================
-     LEITURA VIA INTERNET ARCHIVE (livros da Open Library)
-     Embute o leitor do próprio Archive (iframe). É o MESMO item
-     cuja capa aparece no acervo — então nunca há livro trocado.
+     LEITURA EMBUTIDA (livros de domínio público)
+     Embute o leitor do próprio acervo de origem (iframe). É o
+     MESMO item cuja capa aparece no acervo — então nunca há
+     livro trocado. Serve para Internet Archive e Project Gutenberg.
      ============================================================ */
-  function renderIA(ia) {
+  function renderEmbed(embedUrl, extUrl, extLabel) {
     emptyEl.hidden = true;
     pagesEl.innerHTML = "";
-    // o progresso por scroll não se aplica ao iframe do Archive
+    // o progresso por scroll não se aplica ao iframe externo
     if (topPagesLbl) topPagesLbl.textContent = "leitura on-line";
     if (pctEl) pctEl.style.display = "none";
     if (fillEl && fillEl.parentElement) fillEl.parentElement.style.display = "none";
@@ -262,25 +264,39 @@
 
     const frame = document.createElement("iframe");
     frame.className = "rd-embed";
-    frame.src = "https://archive.org/embed/" + encodeURIComponent(ia);
-    frame.setAttribute("title", "Leitor: " + (bookTitle || ia));
+    frame.src = embedUrl;
+    frame.setAttribute("title", "Leitor: " + (bookTitle || ""));
     frame.setAttribute("allowfullscreen", "");
     frame.setAttribute("allow", "fullscreen");
     frame.setAttribute("frameborder", "0");
     frame.style.cssText = "width:100%; height:calc(100vh - 96px); min-height:70vh; border:0; display:block; background:#fff; border-radius:14px;";
-
-    const bar = document.createElement("div");
-    bar.style.cssText = "display:flex; justify-content:center; margin-top:14px;";
-    const a = document.createElement("a");
-    a.href = "https://archive.org/details/" + encodeURIComponent(ia);
-    a.target = "_blank"; a.rel = "noopener";
-    a.className = "btn btn-line";
-    a.textContent = "↗ Abrir em tela cheia no Internet Archive";
-    bar.appendChild(a);
-
     wrap.appendChild(frame);
-    wrap.appendChild(bar);
+
+    if (extUrl) {
+      const bar = document.createElement("div");
+      bar.style.cssText = "display:flex; justify-content:center; margin-top:14px;";
+      const a = document.createElement("a");
+      a.href = extUrl; a.target = "_blank"; a.rel = "noopener";
+      a.className = "btn btn-line";
+      a.textContent = extLabel || "↗ Abrir em tela cheia";
+      bar.appendChild(a);
+      wrap.appendChild(bar);
+    }
     pagesEl.appendChild(wrap);
+  }
+
+  function renderIA(ia) {
+    renderEmbed("https://archive.org/embed/" + encodeURIComponent(ia),
+      "https://archive.org/details/" + encodeURIComponent(ia),
+      "↗ Abrir em tela cheia no Internet Archive");
+  }
+  function renderGutenberg(gid) {
+    // só id numérico entra (evita URL arbitrária no iframe)
+    const id = String(gid).replace(/[^0-9]/g, "");
+    if (!id) { emptyEl.hidden = false; return; }
+    renderEmbed("https://www.gutenberg.org/ebooks/" + id + ".html.images",
+      "https://www.gutenberg.org/ebooks/" + id,
+      "↗ Abrir no Project Gutenberg");
   }
 
   /* ============================================================
@@ -315,14 +331,17 @@
   if (localSource) {
     // 1) PDF do clube (com medição de progresso e pontos)
     renderPDF(localSource);
+  } else if (gbParam) {
+    // 2) livro em português do Project Gutenberg (mesmo item da capa)
+    renderGutenberg(gbParam);
   } else if (iaParam) {
-    // 2) livro da Open Library — lê via Internet Archive (mesmo item da capa)
+    // 3) livro da Open Library — lê via Internet Archive (mesmo item da capa)
     renderIA(iaParam);
   } else if (!pdfjsLib) {
     emptyEl.hidden = false;
     showToast("Leitor indisponível (falha ao carregar o motor de PDF).");
   } else {
-    // 3) sem fonte: estado vazio (abrir PDF do PC)
+    // 4) sem fonte: estado vazio (abrir PDF do PC)
     emptyEl.hidden = false;
   }
 
