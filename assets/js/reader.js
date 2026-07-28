@@ -37,12 +37,16 @@
      ============================================================ */
   const PDF_LIBRARY = {};
 
+  // Fontes-padrão do PDF.js hospedadas no próprio site (para os PDFs do acervo
+  // renderizarem com a tipografia certa, sem depender de nada externo).
+  const STD_FONTS = "../../assets/pdfjs-standard-fonts/";
+  // Pasta dos PDFs locais do acervo (LIVROS/ na raiz do site).
+  const LIVROS_DIR = "../../LIVROS/";
+
   /* ---------- parâmetros da URL ---------- */
   const params = new URLSearchParams(location.search);
   const bookTitle = (params.get("book") || "").trim();
   const srcParam = (params.get("src") || "").trim();
-  const iaParam = (params.get("ia") || "").trim(); // item do Internet Archive (Open Library)
-  const gbParam = (params.get("gb") || "").trim(); // id do Project Gutenberg (livros em português)
 
   /* ---------- elementos ---------- */
   const pagesEl = $("#rdPages");
@@ -186,7 +190,10 @@
       if (source && source.data) currentBytes = source.data;
       else if (typeof source === "string") currentUrl = source;
 
-      pdfDoc = await pdfjsLib.getDocument(source).promise;
+      // monta os parâmetros do PDF.js incluindo as fontes-padrão hospedadas
+      const params = (typeof source === "string") ? { url: source } : Object.assign({}, source);
+      params.standardFontDataUrl = STD_FONTS;
+      pdfDoc = await pdfjsLib.getDocument(params).promise;
       for (let n = 1; n <= pdfDoc.numPages; n++) await renderPage(n);
 
       // leitura é só no site: nada de baixar o livro
@@ -244,58 +251,21 @@
   $("#emptyOpen").addEventListener("click", () => fileInput.click());
 
   /* ============================================================
-     LEITURA DENTRO DO SITE (livros de domínio público)
-     O livro é lido AQUI, na página do leitor. NUNCA há link que
-     leve o leitor para fora do site. Se um título não puder ser
-     mostrado aqui dentro, ele nem aparece no acervo.
-     ============================================================ */
-  function renderEmbed(embedUrl) {
-    emptyEl.hidden = true;
-    pagesEl.innerHTML = "";
-    // o progresso por scroll não se aplica ao conteúdo embutido
-    if (topPagesLbl) topPagesLbl.textContent = "leitura no site";
-    if (pctEl) pctEl.style.display = "none";
-    if (fillEl && fillEl.parentElement) fillEl.parentElement.style.display = "none";
-    if (ptsWrap) ptsWrap.hidden = true;
-    if (downloadBtn) downloadBtn.hidden = true;
-
-    const wrap = document.createElement("div");
-    wrap.className = "rd-embed-wrap";
-    wrap.style.cssText = "padding:12px 0 40px;";
-
-    const frame = document.createElement("iframe");
-    frame.className = "rd-embed";
-    frame.src = embedUrl;
-    frame.setAttribute("title", "Leitor: " + (bookTitle || ""));
-    frame.setAttribute("allowfullscreen", "");
-    frame.setAttribute("allow", "fullscreen");
-    frame.setAttribute("frameborder", "0");
-    frame.style.cssText = "width:100%; height:calc(100vh - 96px); min-height:70vh; border:0; display:block; background:#fff; border-radius:14px;";
-    wrap.appendChild(frame);
-    pagesEl.appendChild(wrap);
-  }
-
-  function renderIA(ia) {
-    renderEmbed("https://archive.org/embed/" + encodeURIComponent(ia));
-  }
-  function renderGutenberg(gid) {
-    // só id numérico entra (evita URL arbitrária no iframe)
-    const id = String(gid).replace(/[^0-9]/g, "");
-    if (!id) { emptyEl.hidden = false; return; }
-    renderEmbed("https://www.gutenberg.org/ebooks/" + id + ".html.images");
-  }
-
-  /* ============================================================
-     INÍCIO — decide a fonte do livro
+     INÍCIO — decide a fonte do livro (SEMPRE um PDF local do site)
+     Todo livro do acervo é um PDF em LIVROS/, lido aqui pelo PDF.js.
+     Nunca há link ou conteúdo externo.
      ============================================================ */
   function resolveSource() {
-    // 1) PDF embutido (base64) — funciona offline / file://
+    // 1) PDF embutido em base64 (ex.: Noites Brancas) — funciona offline
     if (bookTitle && window.CDA_PDF && window.CDA_PDF[bookTitle]) {
       return { data: base64ToBytes(window.CDA_PDF[bookTitle]) };
     }
-    // 2) por parâmetro ?src=
+    // 2) PDF local do acervo (LIVROS/) via catálogo livros.js
+    if (bookTitle && window.CDA_LIVROS && window.CDA_LIVROS[bookTitle]) {
+      return LIVROS_DIR + window.CDA_LIVROS[bookTitle].slug + ".pdf";
+    }
+    // 3) por parâmetro ?src= (uso interno) ou URL cadastrada
     if (srcParam) return srcParam;
-    // 3) por URL cadastrada
     if (bookTitle && PDF_LIBRARY[bookTitle]) return PDF_LIBRARY[bookTitle];
     return null;
   }
@@ -315,19 +285,13 @@
 
   const localSource = pdfjsLib ? resolveSource() : null;
   if (localSource) {
-    // 1) PDF do clube (com medição de progresso e pontos)
+    // PDF do acervo, lido no site (com medição de progresso e pontos)
     renderPDF(localSource);
-  } else if (gbParam) {
-    // 2) livro em português do Project Gutenberg (mesmo item da capa)
-    renderGutenberg(gbParam);
-  } else if (iaParam) {
-    // 3) livro da Open Library — lê via Internet Archive (mesmo item da capa)
-    renderIA(iaParam);
   } else if (!pdfjsLib) {
     emptyEl.hidden = false;
     showToast("Leitor indisponível (falha ao carregar o motor de PDF).");
   } else {
-    // 4) sem fonte: estado vazio (abrir PDF do PC)
+    // sem fonte: estado vazio (abrir PDF do PC)
     emptyEl.hidden = false;
   }
 

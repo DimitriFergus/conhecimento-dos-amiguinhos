@@ -35,24 +35,14 @@
   const CAT_CLASS = window.CDA_CAT_CLASS || {};
   const initials = (t) => t.split(" ").filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
 
-  /* ---------- Registro de metadados de livros ----------
-     Além do catálogo curado (catalog.js, com ISBN e sinopse), guardamos
-     em localStorage os livros vindos da Open Library que o usuário
-     encontrar/adicionar. Assim a estante, o leitor e as recomendações
-     conseguem mostrar capa + autor mesmo de livros que não são do acervo. */
-  const BOOKMETA_KEY = "cda_bookmeta";
-  function readBookMeta() { try { return JSON.parse(LS.getItem(BOOKMETA_KEY)) || {}; } catch (e) { return {}; } }
-  function cacheBookMeta(title, m) {
-    if (!title || CATALOG[title]) return; // acervo curado tem prioridade
-    const all = readBookMeta();
-    all[title] = Object.assign({}, all[title], m);
-    try { LS.setItem(BOOKMETA_KEY, JSON.stringify(all)); } catch (e) {}
-  }
-  /* Lookup unificado: catálogo curado > cache externo (Gutenberg/OL) > genérico. */
+  // Capa de um livro local do acervo (LIVROS/): a imagem fica em assets/img/livros/.
+  function livroCover(m) { return m && m.cover ? ("../../assets/img/livros/" + m.slug + ".jpg") : ""; }
+
+  /* Lookup unificado: catálogo curado > acervo local (LIVROS) > genérico. */
   function bookMeta(title) {
     if (CATALOG[title]) return Object.assign({ t: title }, CATALOG[title]);
-    const m = readBookMeta()[title];
-    if (m) return { t: title, a: m.a || "Autor desconhecido", c: m.c || "literatura", cat: m.cat || "Clássico", isbn: m.isbn || "", cover: m.cover || "", ia: m.ia || "", gid: m.gid || "", year: m.year || null, ol: true };
+    const L = window.CDA_LIVROS && window.CDA_LIVROS[title];
+    if (L) return { t: title, a: L.a, c: L.c || "literatura", cat: L.cat || "Literatura", isbn: "", cover: livroCover(L), slug: L.slug, year: L.year || null, local: true };
     return { t: title, a: "Autor", c: "literatura", cat: "Literatura", isbn: "" };
   }
 
@@ -352,46 +342,40 @@
   }
 
   /* ============================================================
-     RENDER: Biblioteca de Alexandria — UM acervo só.
-     Junta três fontes num grid só, todos LEGÍVEIS aqui dentro:
-       1) Catálogo curado do clube (catalog.js);
-       2) Project Gutenberg em PORTUGUÊS (clássicos que as pessoas
-          gostam de ler — Machado, Eça, José de Alencar…), lidos
-          pelo HTML do próprio Gutenberg;
-       3) Open Library (grandes clássicos mundiais de domínio
-          público), lidos pelo Internet Archive.
-     A capa de cada livro é a imagem do PRÓPRIO item que abre no
-     leitor, então a capa nunca fica trocada.
+     RENDER: Biblioteca de Alexandria — ACERVO LOCAL.
+     Todos os livros são PDFs guardados no site (LIVROS/ + Noites
+     Brancas), lidos AQUI no leitor do clube. Sem API, sem link
+     externo: se está no acervo, lê no site. A capa de cada livro
+     é a imagem do próprio livro, então nunca há livro trocado.
      ============================================================ */
-  const CATALOG_LIST = Object.keys(CATALOG).map((t) => ({ t, ...CATALOG[t] }));
   let alexFilter = "all";
   let alexSearch = "";
   const normTxt = (s) => String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 
-  // Estado das fontes externas (cada uma pagina por conta).
-  let gbBooks = [], gbPage = 1, gbTotal = 0, gbLoading = false, gbToken = 0;
-  let olBooks = [], olPage = 1, olTotal = 0, olLoading = false, olToken = 0;
-  let alexTimer = null;
-  const OL_PER = 24;
-  // Categoria -> termo de busca em português.
-  const CAT_TERM = {
-    all: "", ficcao: "ficção científica", autoajuda: "autoajuda",
-    filosofia: "filosofia", historia: "história", literatura: "romance",
-    matematica: "matemática",
-  };
-
   function inEstante(t) { return (readShelf() || []).includes(t); }
 
-  // Monta o HTML de UM card. Serve para o acervo curado e para as fontes externas.
+  // Monta a lista do acervo local: clássicos em LIVROS/ + livros do
+  // clube que têm PDF embutido (ex.: Noites Brancas).
+  function localLibrary() {
+    const list = [];
+    const L = window.CDA_LIVROS || {};
+    Object.keys(L).forEach((t) => {
+      const m = L[t];
+      list.push({ t, a: m.a, c: m.c || "literatura", cat: m.cat || "Literatura", year: m.year, cover: livroCover(m) });
+    });
+    Object.keys(CATALOG).forEach((t) => {
+      if (window.CDA_PDF && window.CDA_PDF[t]) list.push({ t, ...CATALOG[t] });
+    });
+    return list;
+  }
+
+  // Monta o HTML de UM card do acervo.
   function alexCardHTML(b, i) {
     const added = inEstante(b.t);
     const t = escapeHtml(b.t), a = escapeHtml(b.a || "");
     const catLabel = escapeHtml(b.cat || CAT_NAME[b.c] || "Livro");
     const src = b.isbn ? coverURL(b.isbn) : (b.cover || "");
     const img = src ? `<img class="cover-img" src="${src}" alt="Capa de ${t}" loading="lazy" onerror="this.remove()" />` : "";
-    const tagOrYear = b.ext
-      ? `<span class="book-year">${b.year ? b.year : "clássico"}</span>`
-      : `<button class="book-tag" data-tag="${b.c}">#${catLabel}</button>`;
     return `
       <article class="book-card card-enter" data-title="${t}" style="animation-delay:${Math.min(i * 18, 260)}ms">
         <div class="book-cover cov-${b.c}">
@@ -405,7 +389,7 @@
             <strong class="book-title">${t}</strong>
             <small class="book-author">${a}</small>
           </div>
-          ${tagOrYear}
+          <button class="book-tag" data-tag="${b.c}">#${catLabel}</button>
           <button class="alex-add ${added ? "is-added" : ""}" data-title="${t}">
             <span class="lbl-in">${added ? "✓ Na estante" : "+ Adicionar à estante"}</span>
             <span class="lbl-out">✕ Tirar da estante</span>
@@ -414,7 +398,6 @@
       </article>`;
   }
 
-  // Liga os eventos de clique dos cards já injetados no grid.
   function wireAlexCards(grid) {
     $$(".book-card", grid).forEach((card) => card.addEventListener("click", () => openBookInfo(card.dataset.title)));
     $$(".alex-add", grid).forEach((btn) => btn.addEventListener("click", (e) => {
@@ -432,130 +415,33 @@
     el.hidden = !msg; el.textContent = msg || "";
   }
 
-  // Livros curados que casam com o filtro/busca atuais.
-  function curatedMatches() {
+  function renderAlexandria() {
+    const grid = $("#alexGrid");
+    if (!grid) return;
     const q = normTxt(alexSearch);
-    return CATALOG_LIST.filter((b) => {
+    const list = localLibrary().filter((b) => {
       if (alexFilter !== "all" && b.c !== alexFilter) return false;
       if (q && !(normTxt(b.t).includes(q) || normTxt(b.a).includes(q))) return false;
       return true;
     });
-  }
-
-  // Render puro do acervo unificado (curado + Gutenberg + OL já buscados). NÃO busca.
-  // Ordem: curados, depois Gutenberg (português/bons), depois Open Library (mundo).
-  function renderAlexandria() {
-    const grid = $("#alexGrid");
-    if (!grid) return;
-    const seen = new Set();
-    const all = [];
-    curatedMatches().concat(gbBooks, olBooks).forEach((b) => {
-      const key = normTxt(b.t);
-      if (seen.has(key)) return;      // não repete o mesmo título entre fontes
-      seen.add(key); all.push(b);
-    });
-
-    const loading = gbLoading || olLoading;
-    const empty = $("#alexEmpty"); if (empty) empty.hidden = all.length !== 0 || loading;
-    grid.innerHTML = all.map((b, i) => alexCardHTML(b, i)).join("");
+    const empty = $("#alexEmpty"); if (empty) empty.hidden = list.length !== 0;
+    grid.innerHTML = list.map((b, i) => alexCardHTML(b, i)).join("");
     wireAlexCards(grid);
-
-    const more = $("#alexMore");
-    if (more) {
-      const hasMore = (gbBooks.length < gbTotal) || (olBooks.length < olTotal);
-      more.hidden = !hasMore || loading;
-      more.textContent = loading ? "Carregando…" : "Carregar mais livros";
-      more.disabled = loading;
-    }
-    if (loading) setAlexStatus(all.length ? `${all.length} livros · carregando mais…` : "Carregando o acervo…");
-    else if (all.length) setAlexStatus(`${all.length} livros no acervo`);
-    else setAlexStatus("");
-  }
-
-  /* ---- Project Gutenberg (pt): clássicos que as pessoas gostam de ler ---- */
-  function fetchGB(reset) {
-    if (!window.GB) { renderAlexandria(); return; }
-    if (reset) { gbBooks = []; gbPage = 1; gbTotal = 0; }
-    const query = alexSearch.trim() ? alexSearch.trim() : (CAT_TERM[alexFilter] || "");
-    const cat = alexFilter === "all" ? "literatura" : alexFilter;
-    const token = ++gbToken;
-    gbLoading = true;
-    renderAlexandria();
-    window.GB.search(query, { page: gbPage })
-      .then((res) => {
-        if (token !== gbToken) return;
-        gbTotal = res.total;
-        res.books.forEach((b) => {
-          if (!b.gid) return;                // sem id = não dá pra ler
-          if (CATALOG[b.t]) return;          // já é do acervo curado
-          b.c = cat; b.cat = "Português"; b.ext = true;
-          cacheBookMeta(b.t, { a: b.a, c: b.c, cat: b.cat, cover: b.cover, year: b.year, gid: b.gid });
-          gbBooks.push(b);
-        });
-        gbLoading = false;
-        renderAlexandria();
-      })
-      .catch(() => { if (token !== gbToken) return; gbLoading = false; renderAlexandria(); });
-  }
-
-  /* ---- Open Library: grandes clássicos mundiais, públicos e legíveis ---- */
-  function fetchOL(reset) {
-    if (!window.OL) { renderAlexandria(); return; }
-    if (reset) { olBooks = []; olPage = 1; olTotal = 0; }
-    const base = alexSearch.trim() ? alexSearch.trim() : (CAT_TERM[alexFilter] || "");
-    const query = (base ? base + " " : "") + "ebook_access:public";
-    const cat = alexFilter === "all" ? "literatura" : alexFilter;
-    const token = ++olToken;
-    olLoading = true;
-    renderAlexandria();
-    window.OL.search(query, { limit: OL_PER, page: olPage, sort: alexSearch.trim() ? undefined : "readinglog" })
-      .then((res) => {
-        if (token !== olToken) return;
-        olTotal = res.total;
-        res.books.forEach((b) => {
-          if (!b.ia) return;                 // sem item = não dá pra ler
-          if (CATALOG[b.t]) return;          // já é do acervo curado
-          b.c = cat; b.cat = CAT_NAME[cat] || "Clássico"; b.ext = true;
-          cacheBookMeta(b.t, { a: b.a, c: b.c, cat: b.cat, cover: b.cover, year: b.year, ia: b.ia });
-          olBooks.push(b);
-        });
-        olLoading = false;
-        renderAlexandria();
-      })
-      .catch(() => {
-        if (token !== olToken) return;
-        olLoading = false;
-        renderAlexandria();
-        if (!gbBooks.length && !olBooks.length && !curatedMatches().length) setAlexStatus("Erro ao carregar livros. Verifique a conexão e tente de novo.");
-      });
-  }
-
-  // Recarrega o acervo inteiro (as duas fontes) do zero ou a próxima página.
-  function fetchLibrary(reset) { fetchGB(reset); fetchOL(reset); }
-
-  // Busca com atraso (debounce) enquanto o usuário digita.
-  function scheduleLibrary() {
-    renderAlexandria();               // mostra os curados na hora
-    if (alexTimer) clearTimeout(alexTimer);
-    alexTimer = setTimeout(() => fetchLibrary(true), 380);
+    const more = $("#alexMore"); if (more) more.hidden = true;
+    setAlexStatus(list.length ? `${list.length} livros no acervo` : "");
   }
 
   function setAlexFilter(f) {
     alexFilter = f;
     $$("#alexFilters .filter").forEach((btn) => btn.classList.toggle("is-active", btn.dataset.filter === f));
-    fetchLibrary(true);
+    renderAlexandria();
   }
 
   $$("#alexFilters .filter").forEach((btn) => btn.addEventListener("click", () => setAlexFilter(btn.dataset.filter)));
-  const alexMoreBtn = $("#alexMore");
-  if (alexMoreBtn) alexMoreBtn.addEventListener("click", () => {
-    if (gbBooks.length < gbTotal) { gbPage += 1; fetchGB(false); }
-    if (olBooks.length < olTotal) { olPage += 1; fetchOL(false); }
-  });
   const alexSearchInput = $("#alexSearch");
   if (alexSearchInput) alexSearchInput.addEventListener("input", () => {
     alexSearch = alexSearchInput.value;
-    scheduleLibrary();
+    renderAlexandria();
   });
 
   function refreshAll() {
@@ -591,14 +477,13 @@
 
   function openBookInfo(title) {
     const cat = bookMeta(title);
-    const meta = readBookMeta()[title] || {};
     const info = DATA[title] || {
-      syn: cat.ol ? "Clássico disponível para leitura gratuita, direto aqui no leitor do clube." : "Sinopse em breve.",
-      why: "", themes: [], pages: null, year: meta.year || null, dif: ""
+      syn: cat.local ? "Clássico em domínio público, lido do começo ao fim aqui no leitor do clube." : "Sinopse em breve.",
+      why: "", themes: [], pages: null, year: cat.year || null, dif: ""
     };
     const h = getHist(title);
     const added = inEstante(title);
-    const readable = !!(window.CDA_PDF && window.CDA_PDF[title]) || !!(cat && (cat.ia || cat.gid));
+    const readable = !!(window.CDA_PDF && window.CDA_PDF[title]) || !!(cat && cat.local);
 
     $("#bmCat").textContent = cat.cat || CAT_NAME[cat.c] || "";
     $("#bmTitle").textContent = title;
@@ -675,16 +560,16 @@
     const weights = {};
     // o que já leu pesa mais conforme o progresso
     Object.keys(hist).forEach((t) => {
-      const c = (CATALOG[t] || {}).c; if (!c) return;
+      const c = bookMeta(t).c; if (!c) return;
       weights[c] = (weights[c] || 0) + 1 + (hist[t].progress || 0) / 25;
     });
     // livros na estante (mesmo sem ler) também indicam gosto
-    shelf.forEach((t) => { const c = (CATALOG[t] || {}).c; if (c) weights[c] = (weights[c] || 0) + 0.6; });
+    shelf.forEach((t) => { const c = bookMeta(t).c; if (c) weights[c] = (weights[c] || 0) + 0.6; });
 
     const hasSignal = Object.keys(weights).length > 0;
     const readSet = new Set(shelf);
-    // não recomenda o que já está na estante
-    const candidates = CATALOG_LIST.filter((b) => !readSet.has(b.t));
+    // recomenda dentro do acervo local, tirando o que já está na estante
+    const candidates = localLibrary().filter((b) => !readSet.has(b.t));
 
     // categoria favorita (para a justificativa do algoritmo)
     let topCat = null, topW = -1;
@@ -997,7 +882,7 @@
   renderProfile();
   renderReading();
   renderShelf();
-  fetchLibrary(true);   // acervo unificado: curado + Gutenberg (pt) + Open Library
+  renderAlexandria();   // acervo LOCAL: clássicos em PDF, lidos no site
   renderRecs();
   renderBoard();
   reobserveReveals();
