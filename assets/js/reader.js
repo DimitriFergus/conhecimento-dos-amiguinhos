@@ -189,7 +189,8 @@
       pdfDoc = await pdfjsLib.getDocument(source).promise;
       for (let n = 1; n <= pdfDoc.numPages; n++) await renderPage(n);
 
-      downloadBtn.hidden = false;
+      // leitura é só no site: nada de baixar o livro
+      downloadBtn.hidden = true;
       if (topPagesLbl) topPagesLbl.textContent = `${pdfDoc.numPages} páginas`;
       window.addEventListener("scroll", onScroll, { passive: true });
 
@@ -243,16 +244,16 @@
   $("#emptyOpen").addEventListener("click", () => fileInput.click());
 
   /* ============================================================
-     LEITURA EMBUTIDA (livros de domínio público)
-     Embute o leitor do próprio acervo de origem (iframe). É o
-     MESMO item cuja capa aparece no acervo — então nunca há
-     livro trocado. Serve para Internet Archive e Project Gutenberg.
+     LEITURA DENTRO DO SITE (livros de domínio público)
+     O livro é lido AQUI, na página do leitor. NUNCA há link que
+     leve o leitor para fora do site. Se um título não puder ser
+     mostrado aqui dentro, ele nem aparece no acervo.
      ============================================================ */
-  function renderEmbed(embedUrl, extUrl, extLabel) {
+  function renderEmbed(embedUrl) {
     emptyEl.hidden = true;
     pagesEl.innerHTML = "";
-    // o progresso por scroll não se aplica ao iframe externo
-    if (topPagesLbl) topPagesLbl.textContent = "leitura on-line";
+    // o progresso por scroll não se aplica ao conteúdo embutido
+    if (topPagesLbl) topPagesLbl.textContent = "leitura no site";
     if (pctEl) pctEl.style.display = "none";
     if (fillEl && fillEl.parentElement) fillEl.parentElement.style.display = "none";
     if (ptsWrap) ptsWrap.hidden = true;
@@ -271,32 +272,17 @@
     frame.setAttribute("frameborder", "0");
     frame.style.cssText = "width:100%; height:calc(100vh - 96px); min-height:70vh; border:0; display:block; background:#fff; border-radius:14px;";
     wrap.appendChild(frame);
-
-    if (extUrl) {
-      const bar = document.createElement("div");
-      bar.style.cssText = "display:flex; justify-content:center; margin-top:14px;";
-      const a = document.createElement("a");
-      a.href = extUrl; a.target = "_blank"; a.rel = "noopener";
-      a.className = "btn btn-line";
-      a.textContent = extLabel || "↗ Abrir em tela cheia";
-      bar.appendChild(a);
-      wrap.appendChild(bar);
-    }
     pagesEl.appendChild(wrap);
   }
 
   function renderIA(ia) {
-    renderEmbed("https://archive.org/embed/" + encodeURIComponent(ia),
-      "https://archive.org/details/" + encodeURIComponent(ia),
-      "↗ Abrir em tela cheia no Internet Archive");
+    renderEmbed("https://archive.org/embed/" + encodeURIComponent(ia));
   }
   function renderGutenberg(gid) {
     // só id numérico entra (evita URL arbitrária no iframe)
     const id = String(gid).replace(/[^0-9]/g, "");
     if (!id) { emptyEl.hidden = false; return; }
-    renderEmbed("https://www.gutenberg.org/ebooks/" + id + ".html.images",
-      "https://www.gutenberg.org/ebooks/" + id,
-      "↗ Abrir no Project Gutenberg");
+    renderEmbed("https://www.gutenberg.org/ebooks/" + id + ".html.images");
   }
 
   /* ============================================================

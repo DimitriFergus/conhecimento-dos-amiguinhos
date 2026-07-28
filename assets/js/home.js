@@ -207,8 +207,8 @@
           </div>
           <button class="book-tag" data-tag="${b.c}">#${b.cat}</button>
           <div class="book-dl">
-            <span>Baixar PDF</span>
-            <span>↓</span>
+            <span>Ler no site</span>
+            <span>→</span>
           </div>
         </div>`;
       card.querySelector(".book-dl").addEventListener("click", () => {
