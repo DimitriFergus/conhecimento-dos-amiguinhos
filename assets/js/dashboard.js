@@ -38,11 +38,13 @@
   // Capa de um livro local do acervo (LIVROS/): a imagem fica em assets/img/livros/.
   function livroCover(m) { return m && m.cover ? ("../../assets/img/livros/" + m.slug + ".jpg") : ""; }
 
-  /* Lookup unificado: catálogo curado > acervo local (LIVROS) > genérico. */
+  /* Lookup unificado. O ACERVO LOCAL (LIVROS/) vem primeiro: é o livro que
+     realmente abre no leitor, com a capa do próprio arquivo. Só depois cai
+     no catálogo curado (catalog.js), que é só metadado. */
   function bookMeta(title) {
-    if (CATALOG[title]) return Object.assign({ t: title }, CATALOG[title]);
     const L = window.CDA_LIVROS && window.CDA_LIVROS[title];
     if (L) return { t: title, a: L.a, c: L.c || "literatura", cat: L.cat || "Literatura", isbn: "", cover: livroCover(L), slug: L.slug, year: L.year || null, local: true };
+    if (CATALOG[title]) return Object.assign({ t: title }, CATALOG[title]);
     return { t: title, a: "Autor", c: "literatura", cat: "Literatura", isbn: "" };
   }
 
@@ -357,16 +359,8 @@
   // Monta a lista do acervo local: clássicos em LIVROS/ + livros do
   // clube que têm PDF embutido (ex.: Noites Brancas).
   function localLibrary() {
-    const list = [];
     const L = window.CDA_LIVROS || {};
-    Object.keys(L).forEach((t) => {
-      const m = L[t];
-      list.push({ t, a: m.a, c: m.c || "literatura", cat: m.cat || "Literatura", year: m.year, cover: livroCover(m) });
-    });
-    Object.keys(CATALOG).forEach((t) => {
-      if (window.CDA_PDF && window.CDA_PDF[t]) list.push({ t, ...CATALOG[t] });
-    });
-    return list;
+    return Object.keys(L).map((t) => bookMeta(t));
   }
 
   // Monta o HTML de UM card do acervo.

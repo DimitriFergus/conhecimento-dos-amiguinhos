@@ -39,7 +39,9 @@
 
   // Fontes-padrão do PDF.js hospedadas no próprio site (para os PDFs do acervo
   // renderizarem com a tipografia certa, sem depender de nada externo).
-  const STD_FONTS = "../../assets/pdfjs-standard-fonts/";
+  // URL ABSOLUTA: o motor do PDF.js roda num worker e não resolveria um
+  // caminho relativo a partir da página.
+  const STD_FONTS = new URL("../../assets/pdfjs-standard-fonts/", location.href).href;
   // Pasta dos PDFs locais do acervo (LIVROS/ na raiz do site).
   const LIVROS_DIR = "../../LIVROS/";
 
@@ -159,27 +161,77 @@
   /* ============================================================
      RENDERIZAÇÃO
      ============================================================ */
-  async function renderPage(num) {
-    const page = await pdfDoc.getPage(num);
-    const base = page.getViewport({ scale: 1 });
-    const maxW = Math.min(pagesEl.clientWidth || 840, 840);
-    const cssScale = maxW / base.width;
-    const viewport = page.getViewport({ scale: cssScale * dpr });
+  /* ---------- Renderização SOB DEMANDA ----------
+     Um romance pode ter centenas de páginas (Os Maias tem 779). Desenhar
+     todas de uma vez estoura a memória do navegador e trava a aba. Então
+     criamos todas as páginas VAZIAS já com a altura certa (o livro fica
+     com o tamanho real na hora) e só desenhamos as que estão perto da
+     tela — soltando a memória das que ficaram para trás. */
+  let pageObserver = null;
+  let placeholderH = 0;
+  const visiblePages = new Set();   // páginas que estão perto da tela agora
 
-    const wrap = document.createElement("div");
-    wrap.className = "rd-page-wrap";
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.floor(viewport.width);
-    canvas.height = Math.floor(viewport.height);
-    canvas.style.width = "100%";
-    const tag = document.createElement("span");
-    tag.className = "rd-page-num";
-    tag.textContent = num;
-    wrap.appendChild(canvas);
-    wrap.appendChild(tag);
-    pagesEl.appendChild(wrap);
+  function pageWidth() { return Math.min(pagesEl.clientWidth || 840, 840); }
 
-    await page.render({ canvasContext: canvas.getContext("2d"), viewport }).promise;
+  async function buildPages() {
+    const first = await pdfDoc.getPage(1);
+    const base = first.getViewport({ scale: 1 });
+    placeholderH = Math.round(pageWidth() * (base.height / base.width));
+
+    const frag = document.createDocumentFragment();
+    for (let n = 1; n <= pdfDoc.numPages; n++) {
+      const wrap = document.createElement("div");
+      wrap.className = "rd-page-wrap";
+      wrap.dataset.page = String(n);
+      wrap.style.height = placeholderH + "px";
+      const tag = document.createElement("span");
+      tag.className = "rd-page-num";
+      tag.textContent = String(n);
+      wrap.appendChild(tag);
+      frag.appendChild(wrap);
+    }
+    pagesEl.appendChild(frag);
+
+    if (pageObserver) pageObserver.disconnect();
+    pageObserver = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) { visiblePages.add(e.target); drawPage(e.target); }
+        else { visiblePages.delete(e.target); freePage(e.target); }
+      });
+    }, { rootMargin: "1200px 0px" });
+    Array.prototype.forEach.call(pagesEl.querySelectorAll(".rd-page-wrap"), (w) => pageObserver.observe(w));
+  }
+
+  async function drawPage(wrap) {
+    if (wrap.dataset.state) return;              // já desenhada (ou desenhando)
+    wrap.dataset.state = "drawing";
+    try {
+      const page = await pdfDoc.getPage(Number(wrap.dataset.page));
+      const base = page.getViewport({ scale: 1 });
+      const viewport = page.getViewport({ scale: (pageWidth() / base.width) * dpr });
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.floor(viewport.width);
+      canvas.height = Math.floor(viewport.height);
+      await page.render({ canvasContext: canvas.getContext("2d"), viewport }).promise;
+      // se o leitor já rolou para longe enquanto desenhava, joga fora
+      if (!visiblePages.has(wrap)) { canvas.width = 0; canvas.height = 0; wrap.dataset.state = ""; return; }
+      wrap.insertBefore(canvas, wrap.firstChild);
+      wrap.style.height = "";                       // a altura passa a vir do canvas
+      wrap.dataset.state = "done";
+    } catch (e) {
+      wrap.dataset.state = "";
+    }
+  }
+
+  /* solta a memória das páginas que ficaram longe da tela */
+  function freePage(wrap) {
+    if (wrap.dataset.state !== "done") return;
+    const canvas = wrap.querySelector("canvas");
+    if (!canvas) return;
+    wrap.style.height = (wrap.offsetHeight || placeholderH) + "px"; // trava a altura antes
+    canvas.width = 0; canvas.height = 0;                            // libera o buffer
+    canvas.remove();
+    wrap.dataset.state = "";
   }
 
   async function renderPDF(source) {
@@ -194,7 +246,7 @@
       const params = (typeof source === "string") ? { url: source } : Object.assign({}, source);
       params.standardFontDataUrl = STD_FONTS;
       pdfDoc = await pdfjsLib.getDocument(params).promise;
-      for (let n = 1; n <= pdfDoc.numPages; n++) await renderPage(n);
+      await buildPages();
 
       // leitura é só no site: nada de baixar o livro
       downloadBtn.hidden = true;

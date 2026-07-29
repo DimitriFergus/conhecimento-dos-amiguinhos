@@ -200,5 +200,13 @@ window.CDA_LIVROS = {
     "cat": "Ficção",
     "year": 1886,
     "cover": true
+  },
+  "Noites Brancas": {
+    "slug": "noites-brancas",
+    "a": "Fiódor Dostoiévski",
+    "c": "literatura",
+    "cat": "Literatura",
+    "year": 1848,
+    "cover": true
   }
 };
