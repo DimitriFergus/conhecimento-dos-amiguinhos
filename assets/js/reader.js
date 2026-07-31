@@ -234,6 +234,16 @@
     wrap.dataset.state = "";
   }
 
+  /* confere UMA vez se as fontes-padrão do PDF.js estão no ar */
+  let stdFontsCheck = null;
+  function stdFontsReachable() {
+    if (!stdFontsCheck) {
+      stdFontsCheck = fetch(STD_FONTS + "FoxitSerif.pfb", { method: "HEAD" })
+        .then((r) => r.ok).catch(() => false);
+    }
+    return stdFontsCheck;
+  }
+
   async function renderPDF(source) {
     emptyEl.hidden = true;
     pagesEl.innerHTML = "";
@@ -242,9 +252,11 @@
       if (source && source.data) currentBytes = source.data;
       else if (typeof source === "string") currentUrl = source;
 
-      // monta os parâmetros do PDF.js incluindo as fontes-padrão hospedadas
+      // As fontes-padrão deixam a tipografia certa, mas se elas não estiverem
+      // acessíveis é melhor abrir o livro com a fonte reserva do que não abrir.
+      // Por isso conferimos antes de passá-las ao PDF.js.
       const params = (typeof source === "string") ? { url: source } : Object.assign({}, source);
-      params.standardFontDataUrl = STD_FONTS;
+      if (await stdFontsReachable()) params.standardFontDataUrl = STD_FONTS;
       pdfDoc = await pdfjsLib.getDocument(params).promise;
       await buildPages();
 

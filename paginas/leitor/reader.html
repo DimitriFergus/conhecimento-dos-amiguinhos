@@ -6,8 +6,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="../../assets/css/style.css" />
-<link rel="stylesheet" href="../../assets/css/reader.css" />
+<link rel="stylesheet" href="../../assets/css/style.css?v=20260729" />
+<link rel="stylesheet" href="../../assets/css/reader.css?v=20260729" />
 <script>try{if(localStorage.getItem('cda_theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}</script>
 
 <div class="grain" aria-hidden="true"></div>
@@ -54,9 +54,9 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="../../assets/js/db.js"></script>
+<script src="../../assets/js/db.js?v=20260729"></script>
 <!-- Catálogo do acervo local (LIVROS/) + motor PDF.js -->
-<script src="../../assets/data/livros.js"></script>
+<script src="../../assets/data/livros.js?v=20260729"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
   /* Só lê quem está logado e verificado; carrega o leitor após os dados. */
@@ -64,7 +64,7 @@
     if (!user) { location.replace("../inicio/index.html"); return; }
     if (!user.emailVerified) { location.replace("../inicio/index.html?verify=1"); return; }
     var s = document.createElement("script");
-    s.src = "../../assets/js/reader.js";
+    s.src = "../../assets/js/reader.js?v=20260729";
     document.body.appendChild(s);
   });
 </script>

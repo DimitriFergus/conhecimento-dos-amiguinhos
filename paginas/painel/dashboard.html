@@ -6,8 +6,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,900;1,9..144,400;1,9..144,600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="../../assets/css/style.css" />
-<link rel="stylesheet" href="../../assets/css/dashboard.css" />
+<link rel="stylesheet" href="../../assets/css/style.css?v=20260729" />
+<link rel="stylesheet" href="../../assets/css/dashboard.css?v=20260729" />
 <script>try{if(localStorage.getItem('cda_theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}</script>
 
 <div class="grain" aria-hidden="true"></div>
@@ -347,11 +347,11 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="../../assets/js/db.js"></script>
-<script src="../../assets/js/catalog.js"></script>
-<script src="../../assets/js/achievements.js"></script>
-<script src="../../assets/js/booksdata.js"></script>
-<script src="../../assets/data/livros.js"></script>
+<script src="../../assets/js/db.js?v=20260729"></script>
+<script src="../../assets/js/catalog.js?v=20260729"></script>
+<script src="../../assets/js/achievements.js?v=20260729"></script>
+<script src="../../assets/js/booksdata.js?v=20260729"></script>
+<script src="../../assets/data/livros.js?v=20260729"></script>
 <script>
   /* Só entra no painel quem está logado E com e-mail confirmado.
      O app (dashboard.js) só carrega depois que os dados estão prontos. */
@@ -359,7 +359,7 @@
     if (!user) { location.replace("../inicio/index.html"); return; }
     if (!user.emailVerified) { location.replace("../inicio/index.html?verify=1"); return; }
     var s = document.createElement("script");
-    s.src = "../../assets/js/dashboard.js";
+    s.src = "../../assets/js/dashboard.js?v=20260729";
     document.body.appendChild(s);
   });
 </script>
